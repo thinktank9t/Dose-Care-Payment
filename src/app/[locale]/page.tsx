@@ -1,0 +1,106 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { getSession } from "@/lib/auth/session";
+import { ComparisonTable } from "@/components/ComparisonTable";
+import { PriceCards } from "@/components/PriceCards";
+import { SectionLabel } from "@/components/SectionLabel";
+import { Sparkle } from "@/components/Sparkle";
+
+export default async function LandingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("landing");
+  const session = await getSession();
+  const signedIn = session !== null;
+
+  const steps = [1, 2, 3] as const;
+  const faqs = [1, 2, 3] as const;
+
+  return (
+    <div className="container-page">
+      {/* Hero */}
+      <section className="py-14 sm:py-20">
+        <SectionLabel className="mb-4 flex items-center gap-2">
+          <Sparkle size={12} className="text-accent" />
+          {t("label")}
+        </SectionLabel>
+        <h1 className="max-w-[16ch]">{t("title")}</h1>
+        <p className="mt-5 max-w-[56ch] text-body-lg text-ink-2">{t("subtitle")}</p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Link
+            href={signedIn ? "/pay" : "/sign-in?next=%2Fpay"}
+            className="btn btn-primary"
+            data-testid="cta-get-premium"
+          >
+            <Sparkle size={16} />
+            {t("cta")}
+          </Link>
+          {signedIn ? (
+            <Link href="/account" className="btn btn-secondary">
+              {t("ctaAccount")}
+            </Link>
+          ) : (
+            <Link href="/#compare" className="btn btn-secondary">
+              {t("secondaryCta")}
+            </Link>
+          )}
+        </div>
+        <p className="mt-4 text-small text-ink-2">{t("payWithBkash")}</p>
+      </section>
+
+      {/* How it works */}
+      <section className="py-10" aria-labelledby="how">
+        <SectionLabel className="mb-3">{t("howLabel")}</SectionLabel>
+        <h2 id="how">{t("howTitle")}</h2>
+        <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+          {steps.map((n) => (
+            <li key={n} className="card p-5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft font-heading text-[15px] text-accent-ink">
+                {n}
+              </span>
+              <h3 className="mt-4 text-[18px]">{t(`step${n}Title`)}</h3>
+              <p className="mt-2 text-small text-ink-2">{t(`step${n}Body`)}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Comparison */}
+      <section id="compare" className="scroll-mt-20 py-10" aria-labelledby="compare-h">
+        <SectionLabel className="mb-3">{t("compareLabel")}</SectionLabel>
+        <h2 id="compare-h">{t("compareTitle")}</h2>
+        <div className="mt-6">
+          <ComparisonTable />
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="scroll-mt-20 py-10" aria-labelledby="pricing-h">
+        <SectionLabel className="mb-3">{t("pricingLabel")}</SectionLabel>
+        <h2 id="pricing-h">{t("pricingTitle")}</h2>
+        <div className="mt-6">
+          <PriceCards signedIn={signedIn} />
+        </div>
+        <p className="mt-4 text-small text-ink-2">{t("pricingNote")}</p>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-10" aria-labelledby="faq">
+        <SectionLabel className="mb-3" >{t("faqLabel")}</SectionLabel>
+        <h2 id="faq" className="sr-only">{t("faqLabel")}</h2>
+        <dl className="grid gap-4 sm:grid-cols-3">
+          {faqs.map((n) => (
+            <div key={n} className="card p-5">
+              <dt className="font-semibold text-ink">{t(`faq${n}Q`)}</dt>
+              <dd className="mt-2 text-small text-ink-2">{t(`faq${n}A`)}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
+  );
+}
