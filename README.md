@@ -46,8 +46,6 @@ npm run dev
 | `NEXT_PUBLIC_PRICE_MONTHLY_BDT`, `NEXT_PUBLIC_PRICE_YEARLY_BDT` | build | BDT prices as integers (**TODO**). `0` = not open yet: the UI shows "Price to be announced" and the server refuses submissions. |
 | `E2E_FAKE_BACKEND` | tests only | `1` swaps Supabase for an in-memory backend + fake sign-in. Refused when `VERCEL_ENV=production`. |
 
-USD reference prices ($4.99 / $36.99) live in `src/lib/plans.ts`.
-
 ### Supabase (one-time)
 
 1. **Run the migration** `supabase/migrations/20260913180000_website_payments.sql`

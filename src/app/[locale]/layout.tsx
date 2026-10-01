@@ -4,7 +4,6 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { getSession, isAdminSession } from "@/lib/auth/session";
 import { siteUrl } from "@/lib/env";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -64,14 +63,13 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const [messages, session] = await Promise.all([getMessages(), getSession()]);
-  const isAdmin = await isAdminSession(session);
+  const messages = await getMessages();
 
   return (
     <html lang={locale} className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}>
       <body className="flex min-h-svh flex-col">
         <NextIntlClientProvider messages={messages}>
-          <Header signedIn={session !== null} isAdmin={isAdmin} />
+          <Header />
           <main id="main" className="flex-1">
             {children}
           </main>

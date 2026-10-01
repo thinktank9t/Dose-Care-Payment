@@ -8,13 +8,15 @@ test.beforeEach(async ({ page }) => {
   await signOut(page);
 });
 
-test("landing renders and CTA leads to sign-in", async ({ page }) => {
+test("landing renders and the CTA leads to Get Premium", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/en$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Care for everyone");
-  await expect(page.getByTestId("price-yearly")).toContainText("৳ 4,100");
+  // Prices live in Supabase, which this suite does not serve: the pricing
+  // section has to degrade to a message instead of taking the page down.
+  await expect(page.locator("#pricing")).toContainText("couldn't load the plans");
   await page.getByTestId("cta-get-premium").click();
-  await expect(page).toHaveURL(/\/en\/sign-in\?next=%2Fpay$/);
+  await expect(page).toHaveURL(/\/en\/get-premium$/);
 });
 
 test("protected pages redirect to sign-in and back after Google sign-in", async ({ page }) => {

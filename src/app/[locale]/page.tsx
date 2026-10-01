@@ -1,10 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getSession } from "@/lib/auth/session";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceCards } from "@/components/PriceCards";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Sparkle } from "@/components/Sparkle";
+
+/** Prices are read from `plans`, so re-render every 5 minutes. */
+export const revalidate = 300;
 
 export default async function LandingPage({
   params,
@@ -14,8 +16,6 @@ export default async function LandingPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("landing");
-  const session = await getSession();
-  const signedIn = session !== null;
 
   const steps = [1, 2, 3] as const;
   const faqs = [1, 2, 3] as const;
@@ -31,23 +31,13 @@ export default async function LandingPage({
         <h1 className="max-w-[16ch]">{t("title")}</h1>
         <p className="mt-5 max-w-[56ch] text-body-lg text-ink-2">{t("subtitle")}</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Link
-            href={signedIn ? "/pay" : "/sign-in?next=%2Fpay"}
-            className="btn btn-primary"
-            data-testid="cta-get-premium"
-          >
+          <Link href="/get-premium" className="btn btn-primary" data-testid="cta-get-premium">
             <Sparkle size={16} />
             {t("cta")}
           </Link>
-          {signedIn ? (
-            <Link href="/account" className="btn btn-secondary">
-              {t("ctaAccount")}
-            </Link>
-          ) : (
-            <Link href="/#compare" className="btn btn-secondary">
-              {t("secondaryCta")}
-            </Link>
-          )}
+          <Link href="/#compare" className="btn btn-secondary">
+            {t("secondaryCta")}
+          </Link>
         </div>
         <p className="mt-4 text-small text-ink-2">{t("payWithBkash")}</p>
       </section>
@@ -83,7 +73,7 @@ export default async function LandingPage({
         <SectionLabel className="mb-3">{t("pricingLabel")}</SectionLabel>
         <h2 id="pricing-h">{t("pricingTitle")}</h2>
         <div className="mt-6">
-          <PriceCards signedIn={signedIn} />
+          <PriceCards />
         </div>
         <p className="mt-4 text-small text-ink-2">{t("pricingNote")}</p>
       </section>

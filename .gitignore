@@ -1,13 +1,52 @@
+# dependencies
 node_modules/
+
+# next.js
 .next/
 out/
+next-env.d.ts
+
+# env — keep .env.example tracked
 .env
-.env.local
 .env*.local
+.env.development
+.env.production
+.env.test
+*.pem
+
+# testing
 test-results/
 playwright-report/
 blob-report/
-.vercel
+playwright/.cache/
+coverage/
+
+# supabase cli
+supabase/.temp/
+supabase/.branches/
+
+# build / tool caches
 *.tsbuildinfo
-next-env.d.ts
+.eslintcache
+.turbo/
+
+# deployment
+.vercel
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# editors
+.idea/
+.vscode/
+
+# local agent config
+.claude/settings.local.json
+
+# os
 .DS_Store
+Thumbs.db

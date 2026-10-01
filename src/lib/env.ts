@@ -14,7 +14,7 @@ export function siteUrl(): string {
 }
 
 export function supportEmail(): string {
-  return process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@example.com";
+  return process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "think.tank9t@gmail.com";
 }
 
 export function bkashConfig() {

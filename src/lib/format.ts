@@ -27,13 +27,6 @@ export function formatBdt(amount: number | string | null | undefined): string {
   return `৳ ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
 }
 
-export function formatUsd(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
 /** Short code the user types into bKash's "Reference" field. */
 export function userReference(userId: string): string {
   return userId.replace(/-/g, "").slice(0, 6).toUpperCase();

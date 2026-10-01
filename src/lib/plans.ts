@@ -6,12 +6,6 @@ export function isPlanPeriod(value: unknown): value is PlanPeriod {
   return value === "monthly" || value === "yearly";
 }
 
-/** USD list prices (shown for reference; bKash is charged in BDT). */
-export const USD_PRICES: Record<PlanPeriod, number> = {
-  monthly: 4.99,
-  yearly: 36.99,
-};
-
 function readBdt(name: string): number {
   const raw = process.env[name];
   const n = raw ? Number(raw) : 0;
