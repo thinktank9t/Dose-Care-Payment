@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CheckStatusCard } from "@/components/CheckStatusCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
-import { PriceCards } from "@/components/PriceCards";
+import { PriceCards, PriceCardsSkeleton } from "@/components/PriceCards";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Sparkle } from "@/components/Sparkle";
 
@@ -83,8 +84,12 @@ export default async function LandingPage({
       <section id="pricing" className="scroll-mt-20 py-10" aria-labelledby="pricing-h">
         <SectionLabel className="mb-3">{t("pricingLabel")}</SectionLabel>
         <h2 id="pricing-h">{t("pricingTitle")}</h2>
+        {/* The plans come from the database; stream them in so the rest of
+            the page paints straight away instead of waiting on the query. */}
         <div className="mt-6">
-          <PriceCards />
+          <Suspense fallback={<PriceCardsSkeleton />}>
+            <PriceCards />
+          </Suspense>
         </div>
         <p className="mt-4 text-small text-ink-2">{t("pricingNote")}</p>
         <div className="mt-6">

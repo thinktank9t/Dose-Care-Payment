@@ -18,7 +18,9 @@ import {
   type ClaimResult,
 } from "@/lib/premium-claim";
 import { CopyButton } from "./CopyButton";
+import { Skeleton } from "./Skeleton";
 import { Sparkle } from "./Sparkle";
+import { Spinner } from "./Spinner";
 
 type PlansState =
   | { status: "loading" }
@@ -136,14 +138,16 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
         <Step n={1} title={t("step1")} />
 
         {plansState.status === "loading" ? (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2" aria-busy="true">
-            {[0, 1].map((i) => (
-              <div
-                key={i}
-                className="h-[86px] animate-pulse rounded-2xl border border-line bg-bg-alt/70"
-              />
-            ))}
-            <p className="sr-only">{t("plansLoading")}</p>
+          <div className="mt-4" role="status" aria-busy="true" data-testid="claim-plans-loading">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-[86px]" />
+              ))}
+            </div>
+            <p className="mt-4 flex items-center gap-2 text-small text-ink-3">
+              <Spinner size={15} />
+              {t("plansLoading")}
+            </p>
           </div>
         ) : null}
 
@@ -260,7 +264,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
             </button>
           </div>
         ) : (
-          <form className="mt-4 space-y-5" onSubmit={onSubmit} noValidate>
+          <form className="mt-4 space-y-5" onSubmit={onSubmit} noValidate aria-busy={submitting}>
             <div>
               <label htmlFor={`${fieldId}-email`} className="block text-small font-semibold text-ink">
                 {t("emailLabel")}
@@ -345,6 +349,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
               disabled={submitting || disabled}
               data-testid="claim-submit"
             >
+              {submitting ? <Spinner /> : null}
               {submitting ? t("submitting") : t("submit")}
             </button>
           </form>

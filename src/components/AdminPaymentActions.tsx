@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { reviewPayment, type AdminActionState } from "@/lib/actions/admin";
+import { Spinner } from "./Spinner";
 
 export function AdminPaymentActions({ paymentId }: { paymentId: string }) {
   const t = useTranslations("admin");
@@ -22,7 +23,7 @@ export function AdminPaymentActions({ paymentId }: { paymentId: string }) {
   })();
 
   return (
-    <form action={action} className="flex w-56 flex-col gap-2">
+    <form action={action} className="flex w-56 flex-col gap-2" aria-busy={pending}>
       <input type="hidden" name="paymentId" value={paymentId} />
       <input
         name="note"
@@ -40,6 +41,7 @@ export function AdminPaymentActions({ paymentId }: { paymentId: string }) {
           className="btn btn-primary btn-sm flex-1"
           data-testid="admin-verify"
         >
+          {pending ? <Spinner size={14} /> : null}
           {pending ? t("working") : t("verify")}
         </button>
         <button

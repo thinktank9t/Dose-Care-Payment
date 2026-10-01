@@ -14,7 +14,9 @@ import {
   type PremiumView,
   type StatusPayment,
 } from "@/lib/premium-status";
+import { Skeleton } from "./Skeleton";
 import { Sparkle } from "./Sparkle";
+import { Spinner } from "./Spinner";
 
 type Outcome =
   | { kind: "view"; email: string; view: PremiumView }
@@ -66,7 +68,7 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
   return (
     <div className="space-y-6">
       <section className="card p-6">
-        <form className="space-y-5" onSubmit={onSubmit} noValidate>
+        <form className="space-y-5" onSubmit={onSubmit} noValidate aria-busy={loading}>
           <div>
             <label htmlFor={`${fieldId}-email`} className="block text-small font-semibold text-ink">
               {t("emailLabel")}
@@ -111,13 +113,16 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
             disabled={loading}
             data-testid="status-submit"
           >
+            {loading ? <Spinner /> : null}
             {loading ? t("checking") : t("check")}
           </button>
         </form>
       </section>
 
       <div aria-live="polite">
-        {outcome?.kind === "error" ? (
+        {loading ? <ResultLoading label={t("checking")} /> : null}
+
+        {!loading && outcome?.kind === "error" ? (
           <p
             role="alert"
             className="rounded-2xl bg-danger-soft px-4 py-3 text-small text-danger"
@@ -127,7 +132,7 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
           </p>
         ) : null}
 
-        {outcome?.kind === "view" ? (
+        {!loading && outcome?.kind === "view" ? (
           <Result
             view={outcome.view}
             email={outcome.email}
@@ -138,6 +143,28 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * Stands in for the answer card while the lookup runs, so the page shows the
+ * shape of what is coming rather than nothing at all.
+ */
+function ResultLoading({ label }: { label: string }) {
+  return (
+    <section className="card p-6" role="status" aria-busy="true" data-testid="status-loading">
+      <Skeleton rounded="pill" className="h-[26px] w-28" />
+      <Skeleton className="mt-4 h-8 w-3/5" />
+      <Skeleton className="mt-3 h-5 w-2/5" />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <Skeleton className="h-[62px]" />
+        <Skeleton className="h-[62px]" />
+      </div>
+      <p className="mt-5 flex items-center gap-2 text-small text-ink-3">
+        <Spinner size={15} />
+        {label}
+      </p>
+    </section>
   );
 }
 

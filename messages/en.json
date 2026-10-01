@@ -300,13 +300,19 @@
     "lastUpdated": "Last updated {date}"
   },
   "footer": {
-    "support": "Support: <a>{email}</a>",
+    "tagline": "Medication reminders for families, kept on schedule.",
+    "payments": "Payments by bKash · verified within 24 hours.",
+    "productHeading": "Product",
+    "legalHeading": "Company",
+    "compare": "Free vs Premium",
+    "contact": "Contact support",
+    "checkStatus": "Check status",
     "privacy": "Privacy",
     "terms": "Terms",
     "refund": "Refund policy",
-    "rights": "© {year} Dose Care",
-    "tagline": "Medication reminders for families.",
-    "checkStatus": "Check status"
+    "madeIn": "Made in Bangladesh",
+    "backToTop": "Back to top",
+    "rights": "© {year} Dose Care"
   },
   "errors": {
     "notFoundTitle": "Page not found",

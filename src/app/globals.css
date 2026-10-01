@@ -197,8 +197,25 @@ button:focus-visible {
 .prose-legal p { margin-block: 0.9em; color: var(--ink-2); }
 .prose-legal h2 { margin-top: 1.8em; margin-bottom: 0.5em; }
 
+/* Loading placeholders. Flat fill — the palette has no gradients. */
+@utility skeleton {
+  border-radius: var(--radius-card-sm);
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  animation: dc-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dc-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+  /* Keep the spinner turning — it is the only sign work is still running —
+     but slow it down, and hold skeletons at a steady tone. */
+  .animate-spin { animation-duration: 2s; }
+  .skeleton { animation: none; opacity: 0.8; }
 }
 
 /* Bangla has no upper-case; keep micro labels legible. */

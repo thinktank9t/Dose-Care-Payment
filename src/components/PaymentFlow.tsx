@@ -10,6 +10,7 @@ import { formatBdt } from "@/lib/format";
 import { normalizeTrxId } from "@/lib/trx";
 import { CopyButton } from "./CopyButton";
 import { Sparkle } from "./Sparkle";
+import { Spinner } from "./Spinner";
 
 type Props = {
   initialPlan: PlanPeriod;
@@ -133,7 +134,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
       {/* Step 3: form */}
       <section className="card p-6">
         <Step n={3} title={t("step3")} />
-        <form action={action} className="mt-4 space-y-5" noValidate>
+        <form action={action} className="mt-4 space-y-5" noValidate aria-busy={pending}>
           <input type="hidden" name="planPeriod" value={plan} />
 
           <div>
@@ -187,6 +188,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
           ) : null}
 
           <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={pending} data-testid="submit-trx">
+            {pending ? <Spinner /> : null}
             {pending ? t("submitting") : t("submit")}
           </button>
         </form>

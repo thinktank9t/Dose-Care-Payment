@@ -9,7 +9,22 @@ import {
   planDays,
   type ClaimPlan,
 } from "@/lib/premium-claim";
+import { Skeleton } from "./Skeleton";
 import { Sparkle } from "./Sparkle";
+
+/**
+ * Shown while the plans query is in flight. Same grid and card height as the
+ * real thing, so the prices drop in without shifting the page.
+ */
+export function PriceCardsSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2" role="status" aria-busy="true">
+      {[0, 1].map((i) => (
+        <Skeleton key={i} className="h-[232px]" />
+      ))}
+    </div>
+  );
+}
 
 /** Periods that already have translated copy in the `plans` namespace. */
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
