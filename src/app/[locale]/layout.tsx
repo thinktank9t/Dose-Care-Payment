@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Fraunces, Inter, Noto_Sans_Bengali } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
@@ -7,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/lib/env";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { LocaleGuard } from "@/components/LocaleGuard";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -69,6 +71,9 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}>
       <body className="flex min-h-svh flex-col">
         <NextIntlClientProvider messages={messages}>
+          <Suspense fallback={null}>
+            <LocaleGuard />
+          </Suspense>
           <Header />
           <main id="main" className="flex-1">
             {children}

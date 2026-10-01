@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, usePathname } from "@/i18n/navigation";
 import { locales, type Locale } from "@/i18n/routing";
+import { rememberLocaleChoice } from "@/i18n/locale-choice";
 
 const LABEL: Record<Locale, string> = { en: "EN", bn: "বাং" };
 
@@ -131,6 +132,10 @@ function useRestoreAnchor(locale: string) {
  * the page the reader came from — not to the same page in the old language.
  * It also keeps the reader's place, since the two locales set text at
  * different heights.
+ *
+ * The click is also recorded as a choice, which [[LocaleGuard]] then holds to
+ * for the rest of the session — history entries made before the switch still
+ * carry the old language in their URL.
  */
 export function LanguageSwitcher() {
   const t = useTranslations("nav");
@@ -154,7 +159,14 @@ export function LanguageSwitcher() {
             hrefLang={l}
             replace
             scroll={false}
-            onClick={active ? undefined : rememberAnchor}
+            onClick={
+              active
+                ? undefined
+                : () => {
+                    rememberLocaleChoice(l);
+                    rememberAnchor();
+                  }
+            }
             aria-current={active ? "true" : undefined}
             aria-label={l === "en" ? t("english") : t("bangla")}
             data-testid={`lang-${l}`}
