@@ -23,6 +23,7 @@ export async function Footer() {
           </p>
         </div>
         <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Legal">
+          <Link href="/check-status" className="hover:text-ink">{t("checkStatus")}</Link>
           <Link href="/privacy" className="hover:text-ink">{t("privacy")}</Link>
           <Link href="/terms" className="hover:text-ink">{t("terms")}</Link>
           <Link href="/refund-policy" className="hover:text-ink">{t("refund")}</Link>

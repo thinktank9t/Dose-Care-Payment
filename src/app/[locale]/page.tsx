@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { CheckStatusCard } from "@/components/CheckStatusCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceCards } from "@/components/PriceCards";
 import { SectionLabel } from "@/components/SectionLabel";
@@ -40,6 +41,16 @@ export default async function LandingPage({
           </Link>
         </div>
         <p className="mt-4 text-small text-ink-2">{t("payWithBkash")}</p>
+        <p className="mt-2 text-small text-ink-2">
+          {t("alreadyPaid")}{" "}
+          <Link
+            href="/check-status"
+            className="font-medium text-accent-ink underline"
+            data-testid="hero-check-status"
+          >
+            {t("checkStatusCta")}
+          </Link>
+        </p>
       </section>
 
       {/* How it works */}
@@ -76,6 +87,9 @@ export default async function LandingPage({
           <PriceCards />
         </div>
         <p className="mt-4 text-small text-ink-2">{t("pricingNote")}</p>
+        <div className="mt-6">
+          <CheckStatusCard />
+        </div>
       </section>
 
       {/* FAQ */}

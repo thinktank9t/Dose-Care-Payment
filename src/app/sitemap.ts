@@ -4,6 +4,6 @@ import { siteUrl } from "@/lib/env";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
-  const paths = ["", "/get-premium", "/privacy", "/terms", "/refund-policy"];
+  const paths = ["", "/get-premium", "/check-status", "/privacy", "/terms", "/refund-policy"];
   return locales.flatMap((l) => paths.map((p) => ({ url: `${base}/${l}${p}`, changeFrequency: "monthly" as const })));
 }

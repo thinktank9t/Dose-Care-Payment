@@ -123,3 +123,31 @@ test("404 is localised", async ({ page }) => {
   expect(res?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("পাতাটি পাওয়া যায়নি");
 });
+
+test("the landing page routes an existing customer to the status check", async ({ page }) => {
+  await page.goto("/en");
+  await page.getByTestId("hero-check-status").click();
+  await expect(page).toHaveURL(/\/en\/check-status$/);
+
+  // And the card under the pricing cards goes to the same place.
+  await page.goto("/en#pricing");
+  await page.getByTestId("check-status-card").getByTestId("link-check-status").click();
+  await expect(page).toHaveURL(/\/en\/check-status$/);
+});
+
+test("Get Premium links to the status check, which validates the email client-side", async ({ page }) => {
+  await page.goto("/en/get-premium");
+  await page.getByTestId("link-check-status").click();
+  await expect(page).toHaveURL(/\/en\/check-status$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Check your Premium");
+
+  // Supabase is not served to this suite, so only the client-side guards run:
+  // a bad email must never reach the network.
+  await page.getByTestId("status-submit").click();
+  await expect(page.getByTestId("status-field-error")).toHaveText("Please enter your email.");
+
+  await page.getByTestId("status-email").fill("not-an-email");
+  await page.getByTestId("status-submit").click();
+  await expect(page.getByTestId("status-field-error")).toHaveText("Please enter a valid email address.");
+  await expect(page.getByTestId("status-result")).toHaveCount(0);
+});

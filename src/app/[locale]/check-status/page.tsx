@@ -1,24 +1,21 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ClaimPremiumForm } from "@/components/ClaimPremiumForm";
-import { CheckStatusCard } from "@/components/CheckStatusCard";
+import { PremiumStatusCheck } from "@/components/PremiumStatusCheck";
+import { supportEmail } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("getPremium");
+  const t = await getTranslations("checkStatus");
   return { title: t("title") };
 }
 
-export default async function GetPremiumPage({
+export default async function CheckStatusPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ plan?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { plan } = await searchParams;
-  const t = await getTranslations("getPremium");
+  const t = await getTranslations("checkStatus");
 
   return (
     <div className="container-page py-12">
@@ -27,11 +24,7 @@ export default async function GetPremiumPage({
         <p className="mt-3 text-body-lg text-ink-2">{t("subtitle")}</p>
 
         <div className="mt-8">
-          <ClaimPremiumForm initialPlan={plan} />
-        </div>
-
-        <div className="mt-6">
-          <CheckStatusCard />
+          <PremiumStatusCheck supportEmail={supportEmail()} />
         </div>
       </div>
     </div>
