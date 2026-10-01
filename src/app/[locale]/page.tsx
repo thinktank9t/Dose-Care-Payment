@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { AppDownload } from "@/components/AppDownload";
+import { CareAnimation } from "@/components/CareAnimation";
 import { CheckStatusCard } from "@/components/CheckStatusCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceCards, PriceCardsSkeleton } from "@/components/PriceCards";
@@ -25,34 +26,39 @@ export default async function LandingPage({
 
   return (
     <div className="container-page">
-      {/* Hero */}
-      <section className="py-14 sm:py-20">
-        <SectionLabel className="mb-4 flex items-center gap-2">
-          <Sparkle size={12} className="text-accent" />
-          {t("label")}
-        </SectionLabel>
-        <h1 className="max-w-[16ch]">{t("title")}</h1>
-        <p className="mt-5 max-w-[56ch] text-body-lg text-ink-2">{t("subtitle")}</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Link href="/get-premium" className="btn btn-primary" data-testid="cta-get-premium">
-            <Sparkle size={16} />
-            {t("cta")}
-          </Link>
-          <Link href="/#compare" className="btn btn-secondary">
-            {t("secondaryCta")}
-          </Link>
+      {/* Hero. The care circle sits beside the headline on a wide screen and
+          under it on a phone, where the words have to come first. */}
+      <section className="grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-14">
+        <div>
+          <SectionLabel className="mb-4 flex items-center gap-2">
+            <Sparkle size={12} className="text-accent" />
+            {t("label")}
+          </SectionLabel>
+          <h1 className="max-w-[16ch]">{t("title")}</h1>
+          <p className="mt-5 max-w-[56ch] text-body-lg text-ink-2">{t("subtitle")}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link href="/get-premium" className="btn btn-primary" data-testid="cta-get-premium">
+              <Sparkle size={16} />
+              {t("cta")}
+            </Link>
+            <Link href="/#compare" className="btn btn-secondary">
+              {t("secondaryCta")}
+            </Link>
+          </div>
+          <p className="mt-4 text-small text-ink-2">{t("payWithBkash")}</p>
+          <p className="mt-2 text-small text-ink-2">
+            {t("alreadyPaid")}{" "}
+            <Link
+              href="/check-status"
+              className="font-medium text-accent-ink underline"
+              data-testid="hero-check-status"
+            >
+              {t("checkStatusCta")}
+            </Link>
+          </p>
         </div>
-        <p className="mt-4 text-small text-ink-2">{t("payWithBkash")}</p>
-        <p className="mt-2 text-small text-ink-2">
-          {t("alreadyPaid")}{" "}
-          <Link
-            href="/check-status"
-            className="font-medium text-accent-ink underline"
-            data-testid="hero-check-status"
-          >
-            {t("checkStatusCta")}
-          </Link>
-        </p>
+
+        <CareAnimation className="mx-auto w-[220px] shrink-0 sm:w-[264px] lg:mx-0 lg:w-[320px]" />
       </section>
 
       {/* How it works */}
