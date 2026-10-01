@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { AppDownload } from "@/components/AppDownload";
 import { CheckStatusCard } from "@/components/CheckStatusCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { PriceCards, PriceCardsSkeleton } from "@/components/PriceCards";
@@ -96,6 +97,9 @@ export default async function LandingPage({
           <CheckStatusCard />
         </div>
       </section>
+
+      {/* Get the app */}
+      <AppDownload />
 
       {/* FAQ */}
       <section className="py-10" aria-labelledby="faq">

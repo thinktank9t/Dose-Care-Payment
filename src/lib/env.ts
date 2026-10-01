@@ -17,6 +17,26 @@ export function supportEmail(): string {
   return process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "think.tank9t@gmail.com";
 }
 
+/**
+ * Stand-in listing used until the Android app is published. It is a real,
+ * well-formed Play Store URL so the QR code on the landing page encodes
+ * something scannable — it just does not resolve to a listing yet.
+ */
+export const PLAY_STORE_PLACEHOLDER =
+  "https://play.google.com/store/apps/details?id=com.dosecare.app";
+
+/**
+ * Where "Get it on Google Play" points. Set NEXT_PUBLIC_PLAY_STORE_URL once
+ * the listing is live and both the button and the QR code follow — there is
+ * nothing else to change.
+ */
+export function playStore(): { url: string; isPlaceholder: boolean } {
+  const url = process.env.NEXT_PUBLIC_PLAY_STORE_URL?.trim();
+  return url
+    ? { url, isPlaceholder: false }
+    : { url: PLAY_STORE_PLACEHOLDER, isPlaceholder: true };
+}
+
 export function bkashConfig() {
   const accountType = process.env.NEXT_PUBLIC_BKASH_ACCOUNT_TYPE;
   const method = process.env.NEXT_PUBLIC_BKASH_METHOD;

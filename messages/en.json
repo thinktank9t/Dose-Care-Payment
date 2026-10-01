@@ -299,6 +299,16 @@
     "refundBody": "TODO: policy text. Draft: Payments that cannot be matched to a bKash transaction are rejected and not charged. Verified subscriptions are non-refundable except where required by law. Contact <a>{email}</a> within 7 days of payment for help.",
     "lastUpdated": "Last updated {date}"
   },
+  "app": {
+    "label": "Dose Care app",
+    "title": "Get Dose Care on your phone",
+    "body": "Scan the code with your phone camera to install Dose Care from Google Play. Sign in with the same Google account you use here and your Premium is already waiting.",
+    "playStore": "Get it on Google Play",
+    "scan": "Scan to download",
+    "qrAlt": "QR code for the Dose Care listing on Google Play",
+    "comingSoon": "Coming soon",
+    "comingSoonNote": "The Android app is on its way to Google Play. This code and button go live the moment it is published."
+  },
   "footer": {
     "tagline": "Medication reminders for families, kept on schedule.",
     "payments": "Payments by bKash · verified within 24 hours.",
