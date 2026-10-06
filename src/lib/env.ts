@@ -13,8 +13,14 @@ export function siteUrl(): string {
   );
 }
 
+/**
+ * The one support address, deliberately hardcoded. It is not an env var so a
+ * stale value on a hosting provider can never override what the site shows.
+ */
+export const SUPPORT_EMAIL = "support@dose-care.com";
+
 export function supportEmail(): string {
-  return process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@dose-care.com";
+  return SUPPORT_EMAIL;
 }
 
 /**
