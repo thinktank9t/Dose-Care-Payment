@@ -36,6 +36,7 @@ export default defineConfig({
       NEXT_PUBLIC_PRICE_MONTHLY_BDT: "550",
       NEXT_PUBLIC_PRICE_YEARLY_BDT: "4100",
       NEXT_PUBLIC_BKASH_NUMBER: "01700000000",
+      NEXT_PUBLIC_SUPPORT_EMAIL: "support@example.com",
     },
   },
 });

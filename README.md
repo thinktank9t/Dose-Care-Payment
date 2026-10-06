@@ -39,6 +39,7 @@ npm run dev
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser + server | Publishable/anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Service-role key. All plan/payment writes use it. Never expose it. |
 | `NEXT_PUBLIC_SITE_URL` | build | Public origin, no trailing slash. Used for the OAuth redirect. |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | build | Shown in the footer and legal pages (**TODO**) |
 | `NEXT_PUBLIC_BKASH_NUMBER` | build | bKash number users pay to (**TODO**) |
 | `NEXT_PUBLIC_BKASH_ACCOUNT_TYPE` | build | `personal` \| `merchant` (**TODO**) |
 | `NEXT_PUBLIC_BKASH_METHOD` | build | `send_money` \| `payment` (**TODO**) |
