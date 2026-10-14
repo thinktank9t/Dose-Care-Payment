@@ -1,11 +1,13 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Fraunces, Inter, Noto_Sans_Bengali } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/lib/env";
+import { CONTRAST_COOKIE, THEME_COOKIE, parseContrast, parseTheme } from "@/lib/theme";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LocaleGuard } from "@/components/LocaleGuard";
@@ -52,7 +54,19 @@ export async function generateMetadata({
   };
 }
 
-export const viewport = { themeColor: "#F6F4EF", width: "device-width", initialScale: 1 };
+export async function generateViewport(): Promise<Viewport> {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const shared = { width: "device-width", initialScale: 1 } as const;
+  if (theme === "light") return { ...shared, themeColor: "#F3F6F8" };
+  if (theme === "dark") return { ...shared, themeColor: "#0B141A" };
+  return {
+    ...shared,
+    themeColor: [
+      { media: "(prefers-color-scheme: light)", color: "#F3F6F8" },
+      { media: "(prefers-color-scheme: dark)", color: "#0B141A" },
+    ],
+  };
+}
 
 export default async function LocaleLayout({
   children,
@@ -66,9 +80,17 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const jar = await cookies();
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
+  const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
 
   return (
-    <html lang={locale} className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}>
+    <html
+      lang={locale}
+      data-theme={theme === "system" ? undefined : theme}
+      data-contrast={contrast ? "high" : undefined}
+      className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}
+    >
       <body className="flex min-h-svh flex-col">
         <NextIntlClientProvider messages={messages}>
           <Suspense fallback={null}>

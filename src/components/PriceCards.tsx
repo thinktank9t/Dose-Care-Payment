@@ -18,7 +18,7 @@ import { Sparkle } from "./Sparkle";
  */
 export function PriceCardsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2" role="status" aria-busy="true">
+    <div className="shimmer grid gap-4 sm:grid-cols-2" role="status" aria-busy="true">
       {[0, 1].map((i) => (
         <Skeleton key={i} className="h-[232px]" />
       ))}

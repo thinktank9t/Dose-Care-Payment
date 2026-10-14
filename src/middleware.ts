@@ -8,7 +8,7 @@ const intlMiddleware = createIntlMiddleware(routing);
 
 /**
  * Two jobs per request:
- * 1. next-intl: locale prefix, Accept-Language detection, NEXT_LOCALE cookie.
+ * 1. next-intl: locale prefix. Unprefixed URLs go to Bangla.
  * 2. Supabase: refresh the auth session cookie so server components always
  *    see a valid session (the "updateSession" pattern from @supabase/ssr).
  */

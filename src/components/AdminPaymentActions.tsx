@@ -29,7 +29,7 @@ export function AdminPaymentActions({ paymentId }: { paymentId: string }) {
         name="note"
         maxLength={500}
         placeholder={t("notePlaceholder")}
-        className="field h-10 rounded-xl text-[13px]"
+        className="field min-h-10 rounded-xl text-[13px]"
         data-testid="admin-note"
       />
       <div className="flex gap-2">

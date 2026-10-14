@@ -2,15 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supabasePublicConfig } from "@/lib/env";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { routing } from "@/i18n/routing";
 
 /** Supabase OAuth (PKCE) return leg: exchange the code, set cookies, go on. */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const next = safeNextPath(searchParams.get("next"), "/en/account");
+  const next = safeNextPath(searchParams.get("next"), `/${routing.defaultLocale}/account`);
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/en/sign-in?error=oauth`);
+    return NextResponse.redirect(`${origin}/${routing.defaultLocale}/sign-in?error=oauth`);
   }
 
   const response = NextResponse.redirect(`${origin}${next}`);
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(`${origin}/en/sign-in?error=oauth`);
+    return NextResponse.redirect(`${origin}/${routing.defaultLocale}/sign-in?error=oauth`);
   }
   return response;
 }

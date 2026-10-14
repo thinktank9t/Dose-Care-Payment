@@ -54,7 +54,7 @@ export async function AppDownload() {
               </a>
             )}
             {isPlaceholder ? (
-              <span className="pill bg-warn-soft text-warn">{t("comingSoon")}</span>
+              <span className="pill bg-accent-soft text-accent-ink">{t("comingSoon")}</span>
             ) : null}
           </div>
 

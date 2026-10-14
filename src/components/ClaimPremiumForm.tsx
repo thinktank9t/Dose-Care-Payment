@@ -139,7 +139,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
         {plansState.status === "loading" ? (
           <div className="mt-4" role="status" aria-busy="true" data-testid="claim-plans-loading">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="shimmer grid gap-3 sm:grid-cols-2">
               {[0, 1].map((i) => (
                 <Skeleton key={i} className="h-[86px]" />
               ))}
@@ -161,7 +161,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
         ) : null}
 
         {plansState.status === "ready" && plans.length === 0 ? (
-          <p className="mt-4 rounded-2xl bg-warn-soft px-4 py-3 text-small text-warn" role="status">
+          <p className="mt-4 rounded-2xl bg-bg-alt px-4 py-3 text-small text-ink-2" role="status">
             {t("plansEmpty")}
           </p>
         ) : null}

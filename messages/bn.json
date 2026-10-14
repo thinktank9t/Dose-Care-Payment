@@ -17,7 +17,14 @@
     "english": "English",
     "bangla": "বাংলা",
     "skipToContent": "মূল বিষয়ে যান",
-    "menu": "মেনু"
+    "menu": "মেনু",
+    "appearance": "চেহারা",
+    "theme": "থিম",
+    "themeLight": "আলো",
+    "themeDark": "অন্ধকার",
+    "themeSystem": "সিস্টেম",
+    "contrastHigh": "উচ্চ কনট্রাস্ট",
+    "contrastStandard": "সাধারণ কনট্রাস্ট"
   },
   "common": {
     "loading": "লোড হচ্ছে…",
