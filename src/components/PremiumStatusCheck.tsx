@@ -14,6 +14,7 @@ import {
   type PremiumView,
   type StatusPayment,
 } from "@/lib/premium-status";
+import { Glyph } from "./Glyph";
 import { Skeleton } from "./Skeleton";
 import { Sparkle } from "./Sparkle";
 import { Spinner } from "./Spinner";
@@ -153,12 +154,14 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
 function ResultLoading({ label }: { label: string }) {
   return (
     <section className="card p-6" role="status" aria-busy="true" data-testid="status-loading">
-      <Skeleton rounded="pill" className="h-[26px] w-28" />
-      <Skeleton className="mt-4 h-8 w-3/5" />
-      <Skeleton className="mt-3 h-5 w-2/5" />
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Skeleton className="h-[62px]" />
-        <Skeleton className="h-[62px]" />
+      <div className="shimmer">
+        <Skeleton rounded="pill" className="h-[26px] w-28" />
+        <Skeleton className="mt-4 h-8 w-3/5" />
+        <Skeleton className="mt-3 h-5 w-2/5" />
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Skeleton className="h-[62px]" />
+          <Skeleton className="h-[62px]" />
+        </div>
       </div>
       <p className="mt-5 flex items-center gap-2 text-small text-ink-3">
         <Spinner size={15} />
@@ -210,7 +213,8 @@ function Result({
         <LastPayment payment={view.lastPayment} locale={locale} />
 
         {view.pendingExtra ? (
-          <p className="mt-5 rounded-2xl bg-warn-soft px-4 py-3 text-small text-warn" data-testid="status-pending-extra">
+          <p className="mt-5 flex items-start gap-2 rounded-2xl bg-pending-soft px-4 py-3 text-small text-pending" data-testid="status-pending-extra">
+            <Glyph name="clock" size={16} strokeWidth={1.8} className="mt-0.5 shrink-0" />
             {t("pendingExtra")}
           </p>
         ) : null}
@@ -221,7 +225,7 @@ function Result({
   if (view.kind === "pending") {
     return (
       <section className="card p-6" data-testid="status-result" data-status="pending">
-        <Badge tone="warn">{t("pendingTitle")}</Badge>
+        <Badge tone="pending">{t("pendingTitle")}</Badge>
         <h2 className="mt-4 text-[24px]">{t("pendingHeading")}</h2>
         <p className="mt-3 text-ink-2">{t("pendingBody")}</p>
         <p className="mt-2 text-ink-2">{t("checkedFor", { email })}</p>
@@ -245,7 +249,7 @@ function Result({
   if (view.kind === "expired") {
     return (
       <section className="card p-6" data-testid="status-result" data-status="expired">
-        <Badge tone="muted">{t("expiredTitle")}</Badge>
+        <Badge tone="warn">{t("expiredTitle")}</Badge>
         <h2 className="mt-4 text-[24px]">{t("expiredHeading", { date: formatDate(view.until, locale) })}</h2>
         <p className="mt-3 text-ink-2">{t("expiredBody")}</p>
         <p className="mt-2 text-ink-2">{t("checkedFor", { email })}</p>
@@ -299,6 +303,7 @@ function LastPayment({ payment, locale }: { payment: StatusPayment | null; local
 
 const TONES = {
   accent: "bg-accent-soft text-accent-ink",
+  pending: "bg-pending-soft text-pending",
   warn: "bg-warn-soft text-warn",
   muted: "bg-bg-alt text-ink-2",
 } as const;
@@ -313,8 +318,10 @@ function Badge({
   children: React.ReactNode;
 }) {
   return (
-    <span className={`pill ${TONES[tone]} inline-flex items-center gap-1.5`}>
-      {icon ? <Sparkle size={13} /> : null}
+    <span className={`pill ${TONES[tone]}`}>
+      {tone === "accent" && icon ? <Sparkle size={11} /> : null}
+      {tone === "pending" ? <Glyph name="clock" size={11} strokeWidth={1.8} /> : null}
+      {tone === "warn" ? <Glyph name="alertCircle" size={11} strokeWidth={1.8} /> : null}
       {children}
     </span>
   );

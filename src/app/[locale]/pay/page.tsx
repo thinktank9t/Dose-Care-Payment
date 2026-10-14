@@ -8,6 +8,7 @@ import { bdtPrices, isPlanPeriod, type PlanPeriod } from "@/lib/plans";
 import { planStatus } from "@/lib/plan-status";
 import { formatDate, userReference } from "@/lib/format";
 import type { Locale } from "@/i18n/routing";
+import { Glyph } from "@/components/Glyph";
 import { PaymentFlow } from "@/components/PaymentFlow";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -52,7 +53,8 @@ export default async function PayPage({
           </p>
         ) : null}
         {pendingCount > 0 ? (
-          <p className="mt-3 rounded-2xl bg-warn-soft px-4 py-3 text-small text-warn" data-testid="pending-notice">
+          <p className="mt-3 flex items-start gap-2 rounded-2xl bg-pending-soft px-4 py-3 text-small text-pending" data-testid="pending-notice">
+            <Glyph name="clock" size={16} strokeWidth={1.8} className="mt-0.5 shrink-0" />
             {t("pendingNotice", { count: pendingCount })}
           </p>
         ) : null}

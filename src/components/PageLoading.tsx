@@ -21,14 +21,16 @@ export function PageLoading({ cards = 2 }: { cards?: number }) {
   return (
     <div className="container-page py-12" role="status" aria-busy="true">
       <div className="max-w-2xl">
-        <Skeleton className="h-9 w-2/3 sm:h-11" />
-        <Skeleton className="mt-4 h-5 w-full" />
-        <Skeleton className="mt-2 h-5 w-4/5" />
+        <div className="shimmer">
+          <Skeleton className="h-9 w-2/3 sm:h-11" />
+          <Skeleton className="mt-4 h-5 w-full" />
+          <Skeleton className="mt-2 h-5 w-4/5" />
 
-        <div className="mt-8 space-y-4">
-          {Array.from({ length: cards }, (_, i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
+          <div className="mt-8 space-y-4">
+            {Array.from({ length: cards }, (_, i) => (
+              <Skeleton key={i} className="h-40" />
+            ))}
+          </div>
         </div>
 
         <p className="mt-8 flex items-center gap-2 text-small text-ink-3">

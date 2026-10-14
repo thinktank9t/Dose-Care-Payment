@@ -17,7 +17,14 @@
     "english": "English",
     "bangla": "বাংলা",
     "skipToContent": "Skip to content",
-    "menu": "Menu"
+    "menu": "Menu",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "Match system",
+    "contrastHigh": "High contrast",
+    "contrastStandard": "Standard contrast"
   },
   "common": {
     "loading": "Loading…",

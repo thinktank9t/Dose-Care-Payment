@@ -25,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
-    url: `${baseURL}/en`,
+    url: `${baseURL}/bn`,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
     env: {
