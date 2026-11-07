@@ -7,9 +7,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/lib/env";
-import { CONTRAST_COOKIE, THEME_COOKIE, parseContrast, parseTheme } from "@/lib/theme";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { CONTRAST_COOKIE, TEXT_COOKIE, THEME_COOKIE, parseContrast, parseText, parseTheme } from "@/lib/theme";
 import { LocaleGuard } from "@/components/LocaleGuard";
 import "../globals.css";
 
@@ -83,6 +81,7 @@ export default async function LocaleLayout({
   const jar = await cookies();
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
+  const text = parseText(jar.get(TEXT_COOKIE)?.value);
 
   return (
     <html
@@ -90,17 +89,14 @@ export default async function LocaleLayout({
       data-theme={theme === "system" ? undefined : theme}
       data-contrast={contrast ? "high" : undefined}
       className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}
+      style={text === "1" ? undefined : { fontSize: `${Number(text) * 100}%` }}
     >
       <body className="flex min-h-svh flex-col">
         <NextIntlClientProvider messages={messages}>
           <Suspense fallback={null}>
             <LocaleGuard />
           </Suspense>
-          <Header />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

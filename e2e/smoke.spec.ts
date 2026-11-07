@@ -8,15 +8,13 @@ test.beforeEach(async ({ page }) => {
   await signOut(page);
 });
 
-test("landing renders and the CTA leads to Get Premium", async ({ page }) => {
+test("the app opens on onboarding and Premium is a tab", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/bn$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("প্রিয়জনদের");
-  // Prices live in Supabase, which this suite does not serve: the pricing
-  // section has to degrade to a message instead of taking the page down.
-  await expect(page.locator("#pricing")).toContainText("প্ল্যানগুলো লোড করা যায়নি");
-  await page.getByTestId("cta-get-premium").click();
-  await expect(page).toHaveURL(/\/bn\/get-premium$/);
+  await expect(page.getByTestId("onboarding")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("ডোজ");
+  await page.goto("/bn/get-premium");
+  await expect(page.getByTestId("nav-get-premium")).toHaveAttribute("aria-current", "page");
 });
 
 test("protected pages redirect to sign-in and back after Google sign-in", async ({ page }) => {
@@ -103,13 +101,14 @@ test("language switch keeps the current page and query", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "bn");
   await expect(page.getByTestId("google-sign-in")).toHaveText("গুগল দিয়ে চালিয়ে যান");
 
-  // The choice is remembered: an unprefixed URL now lands on /bn.
+  // Unprefixed URLs still open in Bangla, on the app's first screen.
   await page.goto("/");
   await expect(page).toHaveURL(/\/bn$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("প্রিয়জনদের");
+  await expect(page.getByTestId("onboarding")).toBeVisible();
 
+  await page.goto("/bn/get-premium");
   await page.getByTestId("lang-en").click();
-  await expect(page).toHaveURL(/\/en$/);
+  await expect(page).toHaveURL(/\/en\/get-premium$/);
 });
 
 test("Bangla account page uses the app's plan strings", async ({ page }) => {
