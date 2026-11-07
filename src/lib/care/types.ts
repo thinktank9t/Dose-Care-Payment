@@ -48,6 +48,8 @@ export type Permissions = {
 
 export type CarePerson = {
   id: string;
+  /** The other person's `users.id` when this row came from Supabase. */
+  userId?: string;
   name: string;
   pending: boolean;
   permissions: Permissions;

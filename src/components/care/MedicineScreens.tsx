@@ -29,11 +29,11 @@ export function MedicinesScreen() {
   const meds = lowOnly ? profile.medicines.filter(isLow) : profile.medicines;
 
   return (
-    <div className="px-4 pt-5">
-      <div className="flex items-start justify-between">
+    <div className="container-page py-8 lg:py-10">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-[30px]">{t("meds.title")}</h1>
-          <p className="text-small text-ink-2">{t("meds.count", { count: profile.medicines.length })}</p>
+          <h1>{t("meds.title")}</h1>
+          <p className="mt-2 text-ink-2">{t("meds.count", { count: profile.medicines.length })}</p>
         </div>
         <button
           type="button"
@@ -55,7 +55,7 @@ export function MedicinesScreen() {
       ) : meds.length === 0 ? (
         <p className="mt-8 text-center text-ink-2">{t("meds.noneLow")}</p>
       ) : (
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
           {meds.map((med) => (
             <li key={med.id}>
               <Link href={`/medicines/${med.id}`} className="card flex items-start gap-3 p-4">
@@ -122,7 +122,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
   const percent = due === 0 ? 0 : Math.round((taken / due) * 100);
 
   return (
-    <div className="px-4 pb-10 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <div className="flex items-center justify-between">
         <button type="button" onClick={() => router.push(personId ? `/care/${personId}` : "/medicines")} className="flex h-11 w-11 items-center justify-center rounded-full bg-surface" aria-label={t("common.back")}>
           <Icon name="back" />
@@ -142,7 +142,8 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
         </div>
       </div>
 
-      <section className="card mt-5 p-4">
+      <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <p className="label-micro">{t("meds.thisWeek")}</p>
           <p className="font-medium text-accent-ink">{t("meds.onTime", { count: percent })}</p>
@@ -166,7 +167,8 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
         </div>
       </section>
 
-      <section className="card mt-3 p-4">
+      <div>
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <p className="label-micro">{t("meds.schedule")}</p>
           {canEdit ? (
@@ -198,10 +200,12 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
       ) : null}
 
       {canEdit ? (
-        <button type="button" className="btn btn-secondary mt-5 w-full text-warn" onClick={() => setPaused(med.id, !med.paused, personId)}>
+        <button type="button" className="btn btn-secondary mt-4 text-warn" onClick={() => setPaused(med.id, !med.paused, personId)}>
           {med.paused ? t("meds.resume") : t("meds.pause")}
         </button>
       ) : null}
+      </div>
+      </div>
 
       {timesOpen ? (
         <TimesSheet med={med} personId={personId} onClose={() => setTimesOpen(false)} />
@@ -280,7 +284,8 @@ export function MedicineForm({
   }
 
   return (
-    <div className="flex min-h-svh flex-col px-4 pb-6 pt-4">
+    <div className="container-page py-8 lg:py-10">
+    <div className="mx-auto max-w-3xl">
       <ScreenHeader
         eyebrow={t("form.step", { step })}
         title={step === 1 ? (existing ? t("form.editTitle") : t("form.addTitle")) : step === 2 ? t("form.when") : t("form.supplyTitle")}
@@ -428,7 +433,7 @@ export function MedicineForm({
         </div>
       )}
 
-      <div className="mt-auto pt-6">
+      <div className="mt-8">
         {step < 3 ? (
           <button type="button" className="btn btn-primary w-full" disabled={step === 1 && !med.name.trim()} onClick={() => setStep((value) => value + 1)}>
             {step === 1 ? t("form.continueSchedule") : t("form.continueSupply")}
@@ -463,6 +468,7 @@ export function MedicineForm({
           </div>
         </Sheet>
       ) : null}
+    </div>
     </div>
   );
 }

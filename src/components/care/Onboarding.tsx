@@ -21,8 +21,9 @@ export function Onboarding() {
 
   if (profile.phase === "signin") {
     return (
-      <section className="flex min-h-svh flex-col px-6 py-10" data-testid="onboarding">
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
+      <section className="card mx-auto w-full max-w-xl p-6 sm:p-10" data-testid="onboarding">
+        <div className="flex flex-col items-center py-6 text-center">
           <span className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-accent text-on-accent shadow-[0_12px_30px_rgba(11,85,117,0.25)]">
             <Icon name="capsule" size={40} strokeWidth={1.8} />
           </span>
@@ -46,6 +47,7 @@ export function Onboarding() {
           })}
         </p>
       </section>
+      </div>
     );
   }
 
@@ -69,7 +71,8 @@ export function Onboarding() {
       else setPhase("signin");
     }
     return (
-      <section className="flex min-h-svh flex-col px-5 py-6" data-testid="onboarding">
+      <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
+      <section className="card mx-auto flex w-full max-w-xl flex-col p-6 sm:p-10" data-testid="onboarding">
         <div className="mb-5 flex items-center gap-3">
           <button type="button" onClick={back} className="flex h-11 w-11 items-center justify-center rounded-full bg-surface" aria-label={t("common.back")}>
             <Icon name="back" />
@@ -178,6 +181,7 @@ export function Onboarding() {
           </Sheet>
         ) : null}
       </section>
+      </div>
     );
   }
 
@@ -188,7 +192,8 @@ export function Onboarding() {
   ];
   const slide = slides[profile.slide] ?? slides[0];
   return (
-    <section className="flex min-h-svh flex-col px-6 py-5" data-testid="onboarding">
+    <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
+    <section className="card mx-auto flex w-full max-w-xl flex-col p-6 sm:p-10" data-testid="onboarding">
       <div className="flex items-center justify-between">
         {profile.slide === 0 ? (
           <p className="font-heading text-[20px]">Dose Care</p>
@@ -201,7 +206,7 @@ export function Onboarding() {
           {t("onboard.skip")}
         </button>
       </div>
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="flex flex-col items-center py-8 text-center">
         <span className={`mb-8 flex h-36 w-36 items-center justify-center rounded-full ${slide.tint}`}>
           <Icon name={slide.icon} size={52} />
         </span>
@@ -230,5 +235,6 @@ export function Onboarding() {
         </>
       )}
     </section>
+    </div>
   );
 }

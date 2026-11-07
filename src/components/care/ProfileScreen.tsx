@@ -33,9 +33,11 @@ export function ProfileScreen({
   const initial = (profile.name.trim()[0] || "D").toUpperCase();
 
   return (
-    <div className="px-4 pb-6 pt-5">
-      <h1 className="text-[30px]">{t("profile.title")}</h1>
-      <section className="card mt-4 flex items-center gap-3 p-4">
+    <div className="container-page py-8 lg:py-10">
+      <h1>{t("profile.title")}</h1>
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">
+      <div>
+      <section className="card flex items-center gap-3 p-5">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft font-heading text-[24px] text-accent-ink">{initial}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[18px] font-medium">{profile.name.trim() || t("today.friend")}</span>
@@ -53,7 +55,9 @@ export function ProfileScreen({
         <Icon name="chevron" size={18} />
       </Link>
 
-      <p className="label-micro mt-6">{t("profile.accessibility")}</p>
+      </div>
+      <div>
+      <p className="label-micro">{t("profile.accessibility")}</p>
       <section className="card mt-2 divide-y divide-line p-4">
         <button type="button" className="flex min-h-14 w-full items-center justify-between text-left" onClick={() => setLanguage(true)}>
           <span className="inline-flex items-center gap-3"><Icon name="users" size={18} />{t("profile.language")}</span>
@@ -118,6 +122,8 @@ export function ProfileScreen({
           </button>
         </form>
       )}
+      </div>
+      </div>
 
       {edit ? (
         <Sheet title={t("profile.edit")} onClose={() => setEdit(false)}>

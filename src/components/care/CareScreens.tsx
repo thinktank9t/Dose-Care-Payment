@@ -40,9 +40,9 @@ export function CareScreen() {
   }
 
   return (
-    <div className="px-4 pt-5">
-      <h1 className="text-[30px]">{t("carePage.title")}</h1>
-      <div className="mt-4">
+    <div className="container-page py-8 lg:py-10">
+      <h1>{t("carePage.title")}</h1>
+      <div className="mt-6 max-w-md">
         <Segmented
           label={t("carePage.title")}
           value={tab}
@@ -79,7 +79,7 @@ export function CareScreen() {
           {profile.people.length === 0 ? (
             <EmptyState icon={<Icon name="user" size={40} />} title={t("carePage.emptyCareTitle")} body={t("carePage.emptyCareBody")} />
           ) : (
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {profile.people.map((person) => (
                 <li key={person.id} className="card flex items-center gap-3 p-4">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft font-heading text-accent-ink">{person.name.slice(0, 1)}</span>
@@ -168,13 +168,15 @@ export function JoinScreen() {
   }
 
   return (
-    <div className="px-4 pt-4">
+    <div className="container-page py-8">
+    <div className="mx-auto max-w-xl">
       <ScreenHeader title={t("carePage.join")} onBack={() => router.push("/care")} />
       <label className="mt-6 block text-small text-ink-2" htmlFor="code">{t("carePage.code")}</label>
       <input id="code" className="field mt-2 w-full text-center font-mono text-[22px] tracking-[0.2em] uppercase" maxLength={6} value={code} placeholder={t("carePage.codePh")} onChange={(event) => setCode(event.target.value.toUpperCase())} />
       {error ? <p className="mt-2 text-small text-warn">{error === "own" ? t("carePage.ownCode") : t("carePage.badCode")}</p> : null}
       <button type="button" className="btn btn-primary mt-6 w-full" disabled={code.trim().length < 6} onClick={send}>{t("carePage.send")}</button>
       {signOpen ? <SignInSheet onClose={() => setSignOpen(false)} /> : null}
+    </div>
     </div>
   );
 }
@@ -194,7 +196,7 @@ export function PersonScreen({ personId }: { personId: string }) {
   if (!person) return <p className="px-5 py-10 text-ink-2">{t("carePage.missing")}</p>;
   if (person.pending) {
     return (
-      <div className="px-4 pt-4">
+      <div className="container-page py-8">
         <ScreenHeader title={person.name} onBack={() => router.push("/care")} />
         <p className="mt-6 text-ink-2">{t("carePage.waiting")}</p>
       </div>
@@ -204,7 +206,7 @@ export function PersonScreen({ personId }: { personId: string }) {
   const doses = scheduledDoses(person.medicines, profile.personLogs[person.id] ?? [], today);
 
   return (
-    <div className="px-4 pb-8 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <ScreenHeader
         title={person.name}
         onBack={() => router.push("/care")}

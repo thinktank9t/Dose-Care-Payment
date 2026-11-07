@@ -57,14 +57,13 @@ export function TodayScreen() {
   }
 
   return (
-    <div className="px-4 pt-5">
+    <div className="container-page py-8 lg:py-10">
       <p className="text-small text-ink-2">{dateLabel}</p>
-      <div className="mt-1 flex items-start justify-between gap-3">
-        <h1 className="text-[32px] leading-[1.15]">
-          {t(`today.${greetingKey(now)}`)},<br />
-          {profile.name.trim() || t("today.friend")}.
+      <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
+        <h1 className="min-w-0">
+          {t(`today.${greetingKey(now)}`)}, {profile.name.trim() || t("today.friend")}.
         </h1>
-        <Link href="/profile" className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft font-heading text-[20px] text-accent-ink" aria-label={t("tabs.profile")}>
+        <Link href="/profile" className="mb-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[20px] text-accent-ink" aria-label={t("tabs.profile")}>
           {initial}
         </Link>
       </div>
@@ -77,8 +76,9 @@ export function TodayScreen() {
           action={<Link href="/medicines/new" className="font-medium text-accent-ink">{t("today.add")}</Link>}
         />
       ) : (
-        <>
-          <section className="card mt-5 p-4">
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <div>
+          <section className="card p-5">
             <div className="flex items-center gap-3">
               <Progress value={percent} />
               <div className="min-w-0">
@@ -117,8 +117,10 @@ export function TodayScreen() {
             ))}
           </div>
 
+          </div>
+          <div className="grid items-start gap-6 xl:grid-cols-2">
           {upcoming.length > 0 && (
-            <section className="mt-6">
+            <section>
               <h2 className="label-micro">{t("today.upNext", { count: upcoming.length })}</h2>
               <ul className="mt-2 space-y-2">
                 {upcoming.map((dose) => (
@@ -128,7 +130,7 @@ export function TodayScreen() {
             </section>
           )}
           {earlier.length > 0 && (
-            <section className="mt-6">
+            <section>
               <h2 className="label-micro">{t("today.earlier", { count: earlier.length })}</h2>
               <ul className="mt-2 space-y-2">
                 {earlier.map((dose) => (
@@ -137,7 +139,8 @@ export function TodayScreen() {
               </ul>
             </section>
           )}
-        </>
+          </div>
+        </div>
       )}
 
       {sheet ? (

@@ -61,17 +61,14 @@ export function HistoryScreen() {
   }
 
   return (
-    <div className="px-4 pb-8 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <ScreenHeader title={t("history.title")} onBack={() => router.push("/")} />
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+      <div>
+      <div className="flex items-center justify-between">
         <button type="button" className="flex h-11 w-11 items-center justify-center" aria-label={t("history.prev")} onClick={() => shift(-1)}><Icon name="back" /></button>
         <h2 className="text-[22px]">{title}</h2>
         <button type="button" className="flex h-11 w-11 items-center justify-center" aria-label={t("history.next")} onClick={() => shift(1)}><Icon name="chevron" /></button>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <Stat value={`${stats.percent}%`} label={t("history.onTime")} />
-        <Stat value={String(stats.missed)} label={t("history.missed")} warn />
-        <Stat value={String(stats.streak)} label={t("history.streak")} />
       </div>
       <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[12px] text-ink-3">
         {weekdays.map((day) => <span key={day}>{day}</span>)}
@@ -100,6 +97,13 @@ export function HistoryScreen() {
           );
         })}
       </div>
+      </div>
+      <div>
+      <div className="grid grid-cols-3 gap-2">
+        <Stat value={`${stats.percent}%`} label={t("history.onTime")} />
+        <Stat value={String(stats.missed)} label={t("history.missed")} warn />
+        <Stat value={String(stats.streak)} label={t("history.streak")} />
+      </div>
       <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-ink-2">
         <li>{t("history.allTaken")}</li>
         <li>{t("history.someMissed")}</li>
@@ -107,7 +111,9 @@ export function HistoryScreen() {
         <li>{t("history.nothing")}</li>
         <li>{t("history.today")}</li>
       </ul>
-      <button type="button" className="btn btn-primary mt-5 w-full" onClick={() => setExportOpen(true)}>{t("history.export")}</button>
+      <button type="button" className="btn btn-primary mt-6" onClick={() => setExportOpen(true)}>{t("history.export")}</button>
+      </div>
+      </div>
       <div id="print-history" className="hidden" />
       {exportOpen ? (
         <Sheet title={t("history.export")} onClose={() => setExportOpen(false)}>
@@ -137,7 +143,7 @@ export function HistoryDay({ date }: { date: string }) {
   }
 
   return (
-    <div className="px-4 pb-8 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <ScreenHeader title={label} onBack={() => router.push("/history")} />
       {future ? <p className="mt-2 text-small text-ink-2">{t("history.futureNote")}</p> : null}
       {doses.length === 0 ? <p className="mt-8 text-center text-ink-2">{t("history.emptyDay")}</p> : (
