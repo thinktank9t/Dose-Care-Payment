@@ -372,3 +372,10 @@ html[lang="bn"] .pill { font-size: 0.75rem; letter-spacing: 0.6px; }
   font-weight: 600;
   letter-spacing: 0.2px;
 }
+
+@media print {
+  body.dc-printing * { visibility: hidden; }
+  body.dc-printing #print-history,
+  body.dc-printing #print-history * { visibility: visible; }
+  body.dc-printing #print-history { position: absolute; inset: 0; }
+}
