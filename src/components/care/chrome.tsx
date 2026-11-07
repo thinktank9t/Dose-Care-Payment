@@ -186,17 +186,22 @@ export function Sheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const t = useTranslations("care");
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(15,28,36,0.46)]" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(15,28,36,0.46)] p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[86svh] w-full max-w-[440px] overflow-y-auto rounded-t-[24px] bg-surface px-5 pb-8 pt-3 shadow-[0_-8px_30px_rgba(15,28,36,0.12)]"
+        className="max-h-[min(86svh,720px)] w-full max-w-md overflow-y-auto rounded-3xl bg-surface p-6 shadow-[0_16px_40px_rgba(15,28,36,0.16)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
-        {title ? <h2 className="mb-4 text-[22px]">{title}</h2> : null}
+        <div className="mb-4 flex items-start justify-between gap-3">
+          {title ? <h2 className="text-[22px]">{title}</h2> : <span />}
+          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink" onClick={onClose} aria-label={t("common.close")}>
+            <Icon name="close" size={18} />
+          </button>
+        </div>
         {children}
       </div>
     </div>

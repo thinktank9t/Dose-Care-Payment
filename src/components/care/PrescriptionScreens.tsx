@@ -41,7 +41,7 @@ export function PrescriptionsScreen() {
   }
 
   return (
-    <div className="px-4 pb-8 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <ScreenHeader title={t("rx.title")} onBack={() => router.push("/profile")} />
       <label className="btn btn-primary mt-4 w-full">
         {t("rx.scan")}
@@ -51,7 +51,7 @@ export function PrescriptionsScreen() {
       {profile.prescriptions.length === 0 ? (
         <EmptyState icon={<Icon name="star" size={36} />} title={t("rx.emptyTitle")} body={t("rx.emptyBody")} />
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {profile.prescriptions.map((rx) => (
             <li key={rx.id}>
               <button type="button" className="card flex w-full items-center justify-between p-4 text-left" onClick={() => router.push(`/prescriptions/${rx.id}`)}>
@@ -90,7 +90,7 @@ export function PrescriptionView({ id }: { id: string }) {
   if (!ready) return <div className="min-h-svh" />;
   if (!rx) return <p className="px-5 py-10 text-ink-2">{t("rx.missing")}</p>;
   return (
-    <div className="px-4 pb-8 pt-4">
+    <div className="container-page py-8 lg:py-10">
       <ScreenHeader title={rx.name} onBack={() => router.push("/prescriptions")} />
       {rx.kind === "image" ? (
         <img src={rx.dataUrl} alt={rx.name} className="mt-4 w-full rounded-[18px] border border-line" />

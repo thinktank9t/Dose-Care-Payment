@@ -15,10 +15,9 @@
 --   never subscribed; a past value renders as "Premium ended <date>".
 --
 -- Not done here on purpose
--- * `users` row-level security is NOT enabled by this migration. The app still
---   reads/writes `users` without a Supabase session for anonymous users, so
---   turning RLS on would lock them out. `users_select_own` is created so it is
---   in place the day RLS is enabled; it is inert until then.
+-- * This migration does not enable or replace row-level security on `users`.
+--   Production already has it, and the mobile app depends on the existing
+--   `users_select_own` policy.
 
 begin;
 
@@ -168,12 +167,9 @@ create policy payments_insert_own on public.payments
   );
 -- No update/delete policies: clients can never change a submission.
 
--- users: the policy is inert until RLS is enabled on users (see header).
-drop policy if exists users_select_own on public.users;
-create policy users_select_own on public.users
-  for select
-  to authenticated
-  using (google_id = auth.uid()::text);
+-- Do not replace users_select_own. Production already has row-level security
+-- on users, and the mobile app reads through the policy that is already there.
+-- Replacing it with google_id = auth.uid() would lock the phone app out.
 
 -- Plan columns are server-only ------------------------------------------------
 -- PostgREST runs client requests as `anon` / `authenticated`. The service role,

@@ -114,7 +114,10 @@ export class SupabaseRepo implements Repo {
       .select("email")
       .eq("email", email.trim().toLowerCase())
       .maybeSingle();
-    if (error) throw new Error(`admin lookup failed: ${error.message}`);
+    if (error) {
+      if (error.code === "PGRST205" || error.code === "42P01") return false;
+      throw new Error(`admin lookup failed: ${error.message}`);
+    }
     return data !== null;
   }
 

@@ -28,10 +28,12 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
 
   if (!due) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center bg-accent px-6 text-center text-on-accent">
+      <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center rounded-3xl bg-accent px-8 py-12 text-center text-on-accent">
         <h1 className="text-[28px]">{t("reminder.noneTitle")}</h1>
         <p className="mt-2 opacity-80">{t("reminder.noneBody")}</p>
         <button type="button" className="btn mt-8 bg-surface text-accent-ink" onClick={() => router.push("/")}>{t("reminder.close")}</button>
+      </div>
       </div>
     );
   }
@@ -39,7 +41,8 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
   const loud = profile.reminderStyle === "persistent" || due.medicine.extraLoud;
 
   return (
-    <div className={`relative flex min-h-svh flex-col px-5 py-6 text-on-accent ${loud ? "bg-[#06324A]" : "bg-accent"}`}>
+    <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
+    <div className={`mx-auto flex w-full max-w-lg flex-col rounded-3xl px-6 py-8 text-on-accent sm:px-8 ${loud ? "bg-[#06324A]" : "bg-accent"}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-small">
           <Icon name="bell" size={16} /> {t("reminder.kicker")}
@@ -53,7 +56,7 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
           </button>
         </div>
       </div>
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="flex flex-col items-center py-8 text-center">
         <span className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/15">
           <MedGlyph form={due.medicine.form} color={due.medicine.color} size={72} />
         </span>
@@ -72,6 +75,7 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
         ))}
       </div>
       <button type="button" className="mt-3 min-h-12 rounded-full border border-white/30" onClick={() => act(due, "skipped")}>{t("reminder.skip")}</button>
+    </div>
       {styleOpen ? (
         <Sheet title={t("reminder.style")} onClose={() => setStyleOpen(false)}>
           <ul className="space-y-2">

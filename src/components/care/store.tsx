@@ -1,6 +1,19 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  archiveMedicine,
+  pullCare,
+  pushDose,
+  pushInvite,
+  pushJoin,
+  pushLeave,
+  pushMedicine,
+  pushPermission,
+  pushProfile,
+  type RemoteCare,
+} from "@/lib/actions/care-sync";
+import { isUuid } from "@/lib/care/db-map";
 import { sampleCircle } from "@/lib/care/schedule";
 import type {
   DoseLog,
@@ -50,6 +63,35 @@ function hydrate(raw: unknown): Profile {
     people: Array.isArray(value.people) ? value.people : [],
     personLogs: value.personLogs && typeof value.personLogs === "object" ? value.personLogs : {},
     prescriptions: Array.isArray(value.prescriptions) ? value.prescriptions : [],
+  };
+}
+
+function logKey(log: DoseLog): string {
+  return `${log.medicineId}|${log.date}|${log.time}`;
+}
+
+function mergeRemote(current: Profile, remote: RemoteCare, sessionName: string): Profile {
+  const remoteIds = new Set(remote.medicines.map((med) => med.id));
+  const localOnly = current.medicines.filter((med) => isUuid(med.id) && !remoteIds.has(med.id));
+  for (const med of localOnly) void pushMedicine(med);
+  const seen = new Set(remote.logs.map(logKey));
+  const extraLogs = current.logs.filter((log) => isUuid(log.medicineId) && !seen.has(logKey(log)));
+  for (const log of extraLogs) void pushDose(log);
+  if (current.onboarded && current.name && current.name !== remote.name) {
+    void pushProfile({ name: current.name, age: current.age, reasons: current.reasons });
+  }
+  return {
+    ...current,
+    signedIn: true,
+    careSeeded: true,
+    name: current.onboarded && current.name ? current.name : remote.name || current.name || sessionName,
+    age: current.age ?? remote.age,
+    reasons: current.reasons.length > 0 ? current.reasons : remote.reasons,
+    medicines: [...remote.medicines, ...localOnly],
+    logs: [...remote.logs, ...extraLogs],
+    people: remote.people,
+    inviteCode: remote.inviteCode,
+    onboarded: current.onboarded || remote.medicines.length > 0 || remote.age != null || remote.reasons.length > 0,
   };
 }
 
@@ -137,20 +179,37 @@ export function CareProvider({
 
   useEffect(() => {
     if (!ready) return;
-    setProfile((current) => {
-      const signedIn = Boolean(session);
-      if (!signedIn) return current.signedIn ? { ...current, signedIn: false } : current;
-      if (current.signedIn && current.careSeeded) {
-        return current.name ? current : { ...current, name: session?.name || current.name };
-      }
-      return {
-        ...current,
-        signedIn: true,
-        name: current.name || session?.name || "",
-        careSeeded: true,
-        people: current.people.length > 0 ? current.people : sampleCircle(),
-      };
-    });
+    if (!session) {
+      setProfile((current) => (current.signedIn ? { ...current, signedIn: false } : current));
+      return;
+    }
+    let cancel = false;
+    void pullCare()
+      .then((remote) => {
+        if (cancel) return;
+        if (!remote) {
+          setProfile((current) => {
+            if (current.signedIn && current.careSeeded) {
+              return current.name ? current : { ...current, name: session.name || current.name };
+            }
+            return {
+              ...current,
+              signedIn: true,
+              name: current.name || session.name || "",
+              careSeeded: true,
+              people: current.people.length > 0 ? current.people : sampleCircle(),
+            };
+          });
+          return;
+        }
+        setProfile((current) => mergeRemote(current, remote, session.name));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    return () => {
+      cancel = true;
+    };
   }, [ready, session]);
 
   const update = useCallback((fn: (profile: Profile) => Profile) => {
@@ -173,31 +232,50 @@ export function CareProvider({
       profile,
       session,
       setPhase: (phase, slide) => update((current) => ({ ...current, phase, slide: slide ?? current.slide })),
-      setName: (name) => update((current) => ({ ...current, name })),
-      setAge: (age) => update((current) => ({ ...current, age })),
-      toggleReason: (id) =>
-        update((current) => ({
-          ...current,
-          reasons: current.reasons.includes(id)
-            ? current.reasons.filter((reason) => reason !== id)
-            : [...current.reasons, id],
-        })),
-      finishSetup: () => update((current) => ({ ...current, onboarded: true, phase: "done" })),
-      saveMedicine: (med, personId) =>
+      setName: (name) => {
+        update((current) => ({ ...current, name }));
+        void pushProfile({ name });
+      },
+      setAge: (age) => {
+        update((current) => ({ ...current, age }));
+        void pushProfile({ age });
+      },
+      toggleReason: (id) => {
+        const reasons = profile.reasons.includes(id)
+          ? profile.reasons.filter((reason) => reason !== id)
+          : [...profile.reasons, id];
+        update((current) => ({ ...current, reasons }));
+        void pushProfile({ reasons });
+      },
+      finishSetup: () => {
+        update((current) => ({ ...current, onboarded: true, phase: "done" }));
+        void pushProfile({ name: profile.name, age: profile.age, reasons: profile.reasons });
+      },
+      saveMedicine: (med, personId) => {
         update((current) =>
           patchList(current, personId, (meds) => {
             const index = meds.findIndex((item) => item.id === med.id);
             if (index === -1) return [...meds, med];
             return meds.map((item) => (item.id === med.id ? med : item));
           }),
-        ),
-      deleteMedicine: (id, personId) =>
-        update((current) => patchList(current, personId, (meds) => meds.filter((med) => med.id !== id))),
-      setPaused: (id, paused, personId) =>
+        );
+        const owner = personId ? profile.people.find((person) => person.id === personId)?.userId : undefined;
+        void pushMedicine(med, owner);
+      },
+      deleteMedicine: (id, personId) => {
+        update((current) => patchList(current, personId, (meds) => meds.filter((med) => med.id !== id)));
+        void archiveMedicine(id);
+      },
+      setPaused: (id, paused, personId) => {
         update((current) =>
           patchList(current, personId, (meds) => meds.map((med) => (med.id === id ? { ...med, paused } : med))),
-        ),
-      markDose: ({ medicineId, date, time, status, snoozeMinutes = 10, personId }) =>
+        );
+        const list = personId ? profile.people.find((person) => person.id === personId)?.medicines : profile.medicines;
+        const med = list?.find((item) => item.id === id);
+        const owner = personId ? profile.people.find((person) => person.id === personId)?.userId : undefined;
+        if (med) void pushMedicine({ ...med, paused }, owner);
+      },
+      markDose: ({ medicineId, date, time, status, snoozeMinutes = 10, personId }) => {
         update((current) => {
           const logs = personId ? current.personLogs[personId] ?? [] : current.logs;
           const previous = logs.find(
@@ -223,18 +301,44 @@ export function CareProvider({
             logs: nextLogs,
             medicines: withStock(current.medicines, medicineId, previous, status),
           };
-        }),
-      refill: (id, add, personId) =>
+        });
+        const owner = personId ? profile.people.find((person) => person.id === personId)?.userId : undefined;
+        void pushDose({ medicineId, date, time, status, snoozeMinutes }, owner).then((stock) => {
+          if (stock == null || personId) return;
+          setProfile((current) => ({
+            ...current,
+            medicines: current.medicines.map((med) => (med.id === medicineId && med.trackSupply ? { ...med, stock } : med)),
+          }));
+        });
+      },
+      refill: (id, add, personId) => {
+        const list = personId ? profile.people.find((person) => person.id === personId)?.medicines : profile.medicines;
+        const med = list?.find((item) => item.id === id);
         update((current) =>
           patchList(current, personId, (meds) =>
-            meds.map((med) => (med.id === id ? { ...med, stock: Math.max(0, med.stock + add) } : med)),
+            meds.map((item) => (item.id === id ? { ...item, stock: Math.max(0, item.stock + add) } : item)),
           ),
-        ),
-      setSupply: (id, patch, personId) =>
+        );
+        if (med) {
+          const owner = personId ? profile.people.find((person) => person.id === personId)?.userId : undefined;
+          void pushMedicine({ ...med, stock: Math.max(0, med.stock + add) }, owner);
+        }
+      },
+      setSupply: (id, patch, personId) => {
+        const list = personId ? profile.people.find((person) => person.id === personId)?.medicines : profile.medicines;
+        const med = list?.find((item) => item.id === id);
         update((current) =>
-          patchList(current, personId, (meds) => meds.map((med) => (med.id === id ? { ...med, ...patch } : med))),
-        ),
-      setInvite: (code) => update((current) => ({ ...current, inviteCode: code })),
+          patchList(current, personId, (meds) => meds.map((item) => (item.id === id ? { ...item, ...patch } : item))),
+        );
+        if (med) {
+          const owner = personId ? profile.people.find((person) => person.id === personId)?.userId : undefined;
+          void pushMedicine({ ...med, ...patch }, owner);
+        }
+      },
+      setInvite: (code) => {
+        update((current) => ({ ...current, inviteCode: code }));
+        void pushInvite(code);
+      },
       join: (code) => {
         const trimmed = code.trim().toUpperCase();
         if (!/^[A-Z0-9]{6}$/.test(trimmed)) return "bad";
@@ -255,22 +359,38 @@ export function CareProvider({
             ],
           };
         });
+        void pushJoin(trimmed).then(async (result) => {
+          if (result === "local") return;
+          if (result !== "ok") {
+            setProfile((current) => ({ ...current, people: current.people.filter((person) => person.id !== `join-${trimmed}`) }));
+            return;
+          }
+          const snapshot = await pullCare();
+          if (snapshot) setProfile((current) => mergeRemote(current, snapshot, session?.name ?? ""));
+        });
         return "ok";
       },
-      cancelRequest: (personId) =>
-        update((current) => ({ ...current, people: current.people.filter((person) => person.id !== personId) })),
-      stopCaring: (personId) =>
+      cancelRequest: (personId) => {
+        update((current) => ({ ...current, people: current.people.filter((person) => person.id !== personId) }));
+        void pushLeave(personId);
+      },
+      stopCaring: (personId) => {
         update((current) => {
           const { [personId]: _removed, ...personLogs } = current.personLogs;
           return { ...current, people: current.people.filter((person) => person.id !== personId), personLogs };
-        }),
-      setPermission: (personId, key, value) =>
+        });
+        void pushLeave(personId);
+      },
+      setPermission: (personId, key, value) => {
+        const person = profile.people.find((item) => item.id === personId);
         update((current) => ({
           ...current,
-          people: current.people.map((person) =>
-            person.id === personId ? { ...person, permissions: { ...person.permissions, [key]: value } } : person,
+          people: current.people.map((item) =>
+            item.id === personId ? { ...item, permissions: { ...item.permissions, [key]: value } } : item,
           ),
-        })),
+        }));
+        if (person) void pushPermission(personId, { ...person.permissions, [key]: value });
+      },
       setReminderStyle: (style) => update((current) => ({ ...current, reminderStyle: style })),
       setFullScreen: (on) => update((current) => ({ ...current, fullScreenReminders: on })),
       addPrescription: (rx) => update((current) => ({ ...current, prescriptions: [rx, ...current.prescriptions] })),
