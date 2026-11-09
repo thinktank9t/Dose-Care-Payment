@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { signInWithGoogle } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
-import { locales, type Locale } from "@/i18n/routing";
-import { rememberLocaleChoice } from "@/i18n/locale-choice";
+import type { Locale } from "@/i18n/routing";
 import { formatNumber } from "@/lib/format";
-import { Icon, Sheet } from "./chrome";
+import { Icon } from "./chrome";
 import { useCare } from "./store";
 
 const REASONS = ["myself", "parent", "child", "caregiver", "clinician"] as const;
@@ -16,11 +15,13 @@ const REASONS = ["myself", "parent", "child", "caregiver", "clinician"] as const
 export function Onboarding() {
   const t = useTranslations("care");
   const locale = useLocale() as Locale;
-  const { profile, setPhase, setName, setAge, toggleReason, finishSetup } = useCare();
-  const [ageOpen, setAgeOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
+  const router = useRouter();
+  const { profile, session, setPhase, setName, setAge, toggleReason, finishSetup } = useCare();
+  const [ageDraft, setAgeDraft] = useState(profile.age === null ? "" : String(profile.age));
+  // Signed in already (the site requires it), so the sign-in card would be a dead step.
+  const afterSlides = session ? "name" : "signin";
 
-  if (profile.phase === "signin") {
+  if (profile.phase === "signin" && !session) {
     return (
       <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
       <section className="card mx-auto w-full max-w-xl p-6 sm:p-10" data-testid="onboarding">
@@ -49,23 +50,33 @@ export function Onboarding() {
     );
   }
 
-  if (profile.phase === "name" || profile.phase === "age" || profile.phase === "language" || profile.phase === "why") {
-    const step = profile.phase === "name" ? 1 : profile.phase === "age" ? 2 : profile.phase === "language" ? 3 : 4;
+  // Older saved progress may sit on the removed language step, or on the
+  // sign-in step from before the user signed in.
+  const phase =
+    profile.phase === "language" ? "why" : profile.phase === "signin" && session ? "name" : profile.phase;
+  if (phase === "name" || phase === "age" || phase === "why") {
+    const step = phase === "name" ? 1 : phase === "age" ? 2 : 3;
+    const ageNumber = Number(ageDraft);
+    const ageValid = /^\d{1,3}$/.test(ageDraft.trim()) && ageNumber >= 1 && ageNumber <= 120;
     const canNext =
-      (profile.phase === "name" && profile.name.trim().length > 0) ||
-      (profile.phase === "age" && profile.age !== null) ||
-      profile.phase === "language" ||
-      (profile.phase === "why" && profile.reasons.length > 0);
+      (phase === "name" && profile.name.trim().length > 0) ||
+      (phase === "age" && ageValid) ||
+      (phase === "why" && profile.reasons.length > 0);
     function next() {
-      if (profile.phase === "name") setPhase("age");
-      else if (profile.phase === "age") setPhase("language");
-      else if (profile.phase === "language") setPhase("why");
-      else finishSetup();
+      if (phase === "name") setPhase("age");
+      else if (phase === "age") {
+        setAge(ageNumber);
+        setPhase("why");
+      } else {
+        finishSetup();
+        // Land somewhere useful: an empty Today screen is a dead end.
+        if (profile.medicines.length === 0) router.push("/medicines/new");
+      }
     }
     function back() {
-      if (profile.phase === "age") setPhase("name");
-      else if (profile.phase === "language") setPhase("age");
-      else if (profile.phase === "why") setPhase("language");
+      if (phase === "age") setPhase("name");
+      else if (phase === "why") setPhase("age");
+      else if (session) setPhase("slides", 2);
       else setPhase("signin");
     }
     return (
@@ -77,109 +88,76 @@ export function Onboarding() {
           </button>
           <div className="flex-1">
             <p className="label-micro">{t("setup.step", { step: formatNumber(step, locale) })}</p>
-            <div className="mt-2 grid grid-cols-4 gap-1.5">
-              {[1, 2, 3, 4].map((n) => (
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              {[1, 2, 3].map((n) => (
                 <span key={n} className={`h-1 rounded-full ${n <= step ? "bg-accent" : "bg-line"}`} />
               ))}
             </div>
           </div>
         </div>
-        {profile.phase === "name" && (
-          <>
-            <h1 className="text-[30px]">{t("setup.nameTitle")}</h1>
-            <label className="mt-6 text-small text-ink-2" htmlFor="setup-name">{t("setup.nameLabel")}</label>
-            <input id="setup-name" className="field mt-2 w-full" value={profile.name} placeholder={t("setup.namePlaceholder")} onChange={(event) => setName(event.target.value)} />
-          </>
-        )}
-        {profile.phase === "age" && (
-          <>
-            <h1 className="text-[30px]">{t("setup.ageTitle")}</h1>
-            <p className="mt-2 text-ink-2">{t("setup.ageHint")}</p>
-            <button type="button" className="field mt-6 w-full text-left" onClick={() => setAgeOpen(true)}>
-              {profile.age === null
-                ? t("setup.pickAge")
-                : t("setup.ageYears", { count: formatNumber(profile.age, locale) })}
+        <form
+          className="flex flex-1 flex-col"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canNext) next();
+          }}
+        >
+          {phase === "name" && (
+            <>
+              <h1 className="text-[30px]">{t("setup.nameTitle")}</h1>
+              <label className="mt-6 text-small text-ink-2" htmlFor="setup-name">{t("setup.nameLabel")}</label>
+              <input id="setup-name" className="field mt-2 w-full" autoComplete="given-name" value={profile.name} placeholder={t("setup.namePlaceholder")} onChange={(event) => setName(event.target.value)} />
+            </>
+          )}
+          {phase === "age" && (
+            <>
+              <h1 className="text-[30px]">{t("setup.ageTitle")}</h1>
+              <p className="mt-2 text-ink-2">{t("setup.ageHint")}</p>
+              <label className="mt-6 text-small text-ink-2" htmlFor="setup-age">{t("setup.ageLabel")}</label>
+              <input
+                id="setup-age"
+                className="field mt-2 w-full max-w-[10rem] text-[20px]"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={3}
+                autoComplete="off"
+                value={ageDraft}
+                placeholder="65"
+                onChange={(event) => setAgeDraft(event.target.value.replace(/[^\d]/g, ""))}
+                data-testid="setup-age"
+              />
+            </>
+          )}
+          {phase === "why" && (
+            <>
+              <h1 className="text-[30px]">{t("setup.whyTitle")}</h1>
+              <p className="mt-2 text-ink-2">{t("setup.whyHint")}</p>
+              <ul className="mt-5 space-y-2">
+                {REASONS.map((reason) => {
+                  const on = profile.reasons.includes(reason);
+                  return (
+                    <li key={reason}>
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => toggleReason(reason)}
+                        className={`flex min-h-14 w-full items-center justify-between rounded-[18px] border px-4 text-left ${on ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-surface"}`}
+                      >
+                        {t(`setup.reason.${reason}`)}
+                        {on ? <Icon name="check" size={18} /> : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+          <div className="mt-auto pt-8">
+            <button type="submit" className="btn btn-primary w-full" disabled={!canNext} data-testid="onboarding-continue">
+              {phase === "why" ? t("setup.finish") : t("setup.next")}
             </button>
-          </>
-        )}
-        {profile.phase === "language" && (
-          <>
-            <h1 className="text-[30px]">{t("setup.languageTitle")}</h1>
-            <button type="button" className="card mt-6 flex w-full items-center justify-between p-4 text-left" onClick={() => setLanguageOpen(true)}>
-              <span>{locale === "bn" ? t("setup.bangla") : t("setup.english")}</span>
-              <Icon name="chevron" size={18} />
-            </button>
-          </>
-        )}
-        {profile.phase === "why" && (
-          <>
-            <h1 className="text-[30px]">{t("setup.whyTitle")}</h1>
-            <p className="mt-2 text-ink-2">{t("setup.whyHint")}</p>
-            <ul className="mt-5 space-y-2">
-              {REASONS.map((reason) => {
-                const on = profile.reasons.includes(reason);
-                return (
-                  <li key={reason}>
-                    <button
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => toggleReason(reason)}
-                      className={`flex min-h-14 w-full items-center justify-between rounded-[18px] border px-4 text-left ${on ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-surface"}`}
-                    >
-                      {t(`setup.reason.${reason}`)}
-                      {on ? <Icon name="check" size={18} /> : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-        <div className="mt-auto pt-8">
-          <button type="button" className="btn btn-primary w-full" disabled={!canNext} onClick={next} data-testid="onboarding-continue">
-            {profile.phase === "why" ? t("setup.finish") : t("setup.next")}
-          </button>
-        </div>
-        {ageOpen ? (
-          <Sheet title={t("setup.pickAge")} onClose={() => setAgeOpen(false)}>
-            <div className="max-h-72 space-y-1 overflow-y-auto">
-              {Array.from({ length: 110 }, (_, index) => index + 1).map((age) => (
-                <button
-                  key={age}
-                  type="button"
-                  className={`flex min-h-11 w-full items-center rounded-xl px-3 ${profile.age === age ? "bg-accent-soft text-accent-ink" : ""}`}
-                  onClick={() => {
-                    setAge(age);
-                    setAgeOpen(false);
-                  }}
-                >
-                  {t("setup.ageYears", { count: formatNumber(age, locale) })}
-                </button>
-              ))}
-            </div>
-          </Sheet>
-        ) : null}
-        {languageOpen ? (
-          <Sheet title={t("setup.languageTitle")} onClose={() => setLanguageOpen(false)}>
-            <ul className="space-y-2">
-              {locales.map((item) => (
-                <li key={item}>
-                  <Link
-                    href="/"
-                    locale={item}
-                    hrefLang={item}
-                    replace
-                    onClick={() => rememberLocaleChoice(item)}
-                    className={`flex min-h-14 items-center rounded-[18px] border px-4 ${item === locale ? "border-accent bg-accent-soft text-accent-ink" : "border-line"}`}
-                    data-testid={`lang-${item}`}
-                  >
-                    {item === "bn" ? t("setup.bangla") : t("setup.english")}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Sheet>
-        ) : null}
+          </div>
+        </form>
       </section>
       </div>
     );
@@ -202,7 +180,7 @@ export function Onboarding() {
             <Icon name="back" />
           </button>
         )}
-        <button type="button" className="min-h-11 px-2 text-[15px] text-ink-2" onClick={() => setPhase("signin")} data-testid="onboarding-skip">
+        <button type="button" className="min-h-11 px-2 text-[15px] text-ink-2" onClick={() => setPhase(afterSlides)} data-testid="onboarding-skip">
           {t("onboard.skip")}
         </button>
       </div>
@@ -226,12 +204,14 @@ export function Onboarding() {
         </button>
       ) : (
         <>
-          <button type="button" className="btn btn-primary w-full" onClick={() => setPhase("signin")} data-testid="onboarding-continue">
+          <button type="button" className="btn btn-primary w-full" onClick={() => setPhase(afterSlides)} data-testid="onboarding-continue">
             {t("onboard.getStarted")}
           </button>
-          <button type="button" className="mt-3 min-h-12 text-[15px] font-medium text-ink-2" onClick={() => setPhase("signin")}>
-            {t("onboard.haveAccount")}
-          </button>
+          {session ? null : (
+            <button type="button" className="mt-3 min-h-12 text-[15px] font-medium text-ink-2" onClick={() => setPhase("signin")}>
+              {t("onboard.haveAccount")}
+            </button>
+          )}
         </>
       )}
     </section>

@@ -43,7 +43,8 @@ test("Back is corrected at every step, not just the first", async ({ page }) => 
   await page.goto("/bn/get-premium");
   await page.getByTestId("link-check-status").click();
   await expect(page).toHaveURL(/\/bn\/check-status$/);
-  await page.getByTestId("nav-get-premium").click();
+  // Header tab on desktop, bottom bar (`-mobile`) on phones: click whichever shows.
+  await page.locator('[data-testid^="nav-get-premium"]:visible').click();
   await expect(page).toHaveURL(/\/bn\/get-premium$/);
 
   await page.getByTestId("lang-en").click();

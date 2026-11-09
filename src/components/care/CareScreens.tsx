@@ -6,10 +6,10 @@ import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { signInWithGoogle } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
-import { formatClock, isPast, scheduledDoses, todayKey } from "@/lib/care/schedule";
+import { formatClock, scheduledDoses, todayKey } from "@/lib/care/schedule";
 import { localizeDigits } from "@/lib/format";
 import type { Permissions } from "@/lib/care/types";
-import { EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
+import { DoseFlag, EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
 export function CareScreen() {
@@ -229,7 +229,7 @@ export function PersonScreen({ personId }: { personId: string }) {
               </span>
               {person.permissions.markDoses && dose.status !== "taken" ? (
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => markDose({ medicineId: dose.medicine.id, date: dose.date, time: dose.time, status: "taken", personId: person.id })}>{t("today.took")}</button>
-              ) : dose.status === "taken" ? <Icon name="check" size={18} /> : isPast(dose.date, dose.time) ? <span className="pill bg-warn-soft text-warn">{t("today.missed")}</span> : null}
+              ) : dose.status === "taken" ? <Icon name="check" size={18} /> : <DoseFlag dose={dose} />}
             </li>
           ))}
         </ul>

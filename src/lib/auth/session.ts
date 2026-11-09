@@ -37,19 +37,21 @@ async function readFakeSession(): Promise<Session | null> {
 async function readSupabaseSession(): Promise<Session | null> {
   const { supabaseServer } = await import("@/lib/supabase/server");
   const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  // Verified locally from the signed JWT (no Auth server round trip). The
+  // claims carry the same id, email and Google metadata getUser() returned.
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  const meta = (claims.user_metadata ?? {}) as Record<string, unknown>;
+  const email = typeof claims.email === "string" && claims.email ? claims.email : null;
   const name =
     (typeof meta.full_name === "string" && meta.full_name) ||
     (typeof meta.name === "string" && meta.name) ||
-    user.email?.split("@")[0] ||
+    email?.split("@")[0] ||
     "";
   return {
-    authId: user.id,
-    email: user.email ?? null,
+    authId: claims.sub,
+    email,
     name,
     avatarUrl:
       (typeof meta.avatar_url === "string" && meta.avatar_url) ||

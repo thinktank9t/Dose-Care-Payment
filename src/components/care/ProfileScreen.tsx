@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { signInWithGoogle, signOut } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
+import { Sparkle } from "@/components/Sparkle";
 import { applyContrast, applyTextScale, applyTheme } from "@/lib/appearance";
 import { locales, type Locale } from "@/i18n/routing";
 import { rememberLocaleChoice } from "@/i18n/locale-choice";
@@ -31,6 +32,17 @@ export function ProfileScreen({
   const [high, setHigh] = useState(contrast);
   const [size, setSize] = useState(scale);
   const initial = (profile.name.trim()[0] || "D").toUpperCase();
+
+  // This page can come from the router's prefetch cache, rendered before the
+  // last appearance change. The <html> element always has the live values.
+  useEffect(() => {
+    const root = document.documentElement;
+    const theme = root.dataset.theme;
+    setMode(theme === "light" || theme === "dark" ? theme : "system");
+    setHigh(root.dataset.contrast === "high");
+    const percent = Math.round(parseFloat(root.style.fontSize) || 100);
+    setSize(percent === 115 ? "1.15" : percent === 130 ? "1.3" : "1");
+  }, []);
 
   return (
     <div className="container-page py-8 lg:py-10">
@@ -106,10 +118,16 @@ export function ProfileScreen({
 
       <p className="label-micro mt-6">{t("profile.account")}</p>
       {profile.signedIn ? (
-        <form action={signOut} className="card mt-2 p-4">
-          <p className="text-small text-ink-2">{t("profile.signedIn")}</p>
-          <button type="submit" className="btn btn-secondary mt-3 w-full">{t("profile.signOut")}</button>
-        </form>
+        <>
+          <Link href="/account" className="card mt-2 flex min-h-14 items-center justify-between px-4" data-testid="profile-plan">
+            <span className="inline-flex items-center gap-3"><Sparkle size={18} className="text-accent" />{t("profile.plan")}</span>
+            <Icon name="chevron" size={18} />
+          </Link>
+          <form action={signOut} className="card mt-2 p-4">
+            <p className="text-small text-ink-2">{t("profile.signedIn")}</p>
+            <button type="submit" className="btn btn-secondary mt-3 w-full" data-testid="sign-out">{t("profile.signOut")}</button>
+          </form>
+        </>
       ) : (
         <form action={signInWithGoogle} className="card mt-2 p-4">
           <input type="hidden" name="next" value="/profile" />

@@ -168,29 +168,32 @@ html[lang="bn"] body {
   line-height: 1.75;
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  color: var(--ink);
-  text-wrap: balance;
-}
-html[lang="bn"] :is(h1, h2, h3) {
-  font-family: var(--font-noto-bengali), var(--font-fraunces), serif;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-h1 { font-size: 2.125rem; line-height: 1.1; letter-spacing: -0.8px; }
-h2 { font-size: 1.625rem; line-height: 1.05; letter-spacing: -0.6px; }
-h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.3px; }
-html[lang="bn"] h1 { line-height: 1.3; }
-html[lang="bn"] h2 { line-height: 1.3; }
-html[lang="bn"] h3 { line-height: 1.4; }
+/* In the base layer so utilities (`label-micro`, `text-[30px]`) can override a heading. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  html[lang="bn"] :is(h1, h2, h3) {
+    font-family: var(--font-noto-bengali), var(--font-fraunces), serif;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  h1 { font-size: 2.125rem; line-height: 1.1; letter-spacing: -0.8px; }
+  h2 { font-size: 1.625rem; line-height: 1.05; letter-spacing: -0.6px; }
+  h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.3px; }
+  html[lang="bn"] h1 { line-height: 1.3; }
+  html[lang="bn"] h2 { line-height: 1.3; }
+  html[lang="bn"] h3 { line-height: 1.4; }
 
-@media (min-width: 768px) {
-  h1 { font-size: 2.75rem; }
-  h2 { font-size: 1.875rem; }
+  @media (min-width: 768px) {
+    h1 { font-size: 2.75rem; }
+    h2 { font-size: 1.875rem; }
+  }
 }
 
 @utility container-page {
@@ -201,6 +204,7 @@ html[lang="bn"] h3 { line-height: 1.4; }
 }
 
 @utility label-micro {
+  font-family: var(--font-body);
   font-size: 0.6875rem;
   line-height: 1.4;
   letter-spacing: 1.4px;

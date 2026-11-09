@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
   // Softens locale remounts (EN ↔ BN) via the View Transitions API.
   experimental: {
     viewTransition: true,
+    // Every page is dynamic (theme/session cookies), so by default the client
+    // router refetches a page on each visit, even one it already holds. The
+    // app tabs render from local state, so reuse a visited page for 5 minutes,
+    // matching how long prefetched pages are kept. Server actions that change
+    // payments call revalidatePath, which clears this cache.
+    staleTimes: {
+      dynamic: 300,
+    },
   },
   images: {
     remotePatterns: [

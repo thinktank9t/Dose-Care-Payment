@@ -2,8 +2,35 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { MED_COLORS } from "@/lib/care/schedule";
-import type { MedColor, MedForm } from "@/lib/care/types";
+import { MED_COLORS, isPast } from "@/lib/care/schedule";
+import type { MedColor, MedForm, ScheduledDose } from "@/lib/care/types";
+
+/**
+ * Today's flag for a dose that was not taken. "Late" while it can still be
+ * taken (matches the overdue banner), "Skipped" when the user chose to skip.
+ * "Missed" is kept for past days in History. Each carries a glyph so the
+ * state is not shown by color alone.
+ */
+export function DoseFlag({ dose, className = "" }: { dose: ScheduledDose; className?: string }) {
+  const t = useTranslations("care");
+  if (dose.status === "skipped") {
+    return (
+      <span className={`pill bg-bg-alt text-ink-2 ${className}`}>
+        <Icon name="close" size={11} strokeWidth={1.8} />
+        {t("today.skipped")}
+      </span>
+    );
+  }
+  if (dose.status === "due" && isPast(dose.date, dose.time, new Date())) {
+    return (
+      <span className={`pill bg-warn-soft text-warn ${className}`}>
+        <Icon name="clock" size={12} strokeWidth={1.8} />
+        {t("today.late")}
+      </span>
+    );
+  }
+  return null;
+}
 
 export function Icon({
   name,

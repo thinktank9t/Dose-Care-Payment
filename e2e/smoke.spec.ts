@@ -8,8 +8,10 @@ test.beforeEach(async ({ page }) => {
   await signOut(page);
 });
 
-test("unauthenticated visitors are sent to sign-in; Google unlocks the app", async ({ page }) => {
+test("signed-out visitors land on the public page; Google unlocks the app", async ({ page }) => {
   await page.goto("/");
+  await expect(page).toHaveURL(/\/bn\/premium$/);
+  await page.getByTestId("nav-sign-in").click();
   await expect(page).toHaveURL(/\/bn\/sign-in\?next=%2F$/);
   await page.getByTestId("google-sign-in").click();
   await expect(page).toHaveURL(/\/bn$/);
@@ -24,7 +26,7 @@ test("protected pages redirect to sign-in and back after Google sign-in", async 
   await expect(page).toHaveURL(/\/en\/sign-in\?next=%2Fpay$/);
   await page.getByTestId("google-sign-in").click();
   await expect(page).toHaveURL(/\/en\/pay$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Get Premium");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Send a payment for review");
 
   await page.goto("/en/account");
   await expect(page.getByTestId("plan-card")).toHaveAttribute("data-plan-status", "free");

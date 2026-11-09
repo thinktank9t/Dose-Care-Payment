@@ -52,7 +52,7 @@ export function HistoryScreen() {
       const doses = scheduledDoses(profile.medicines, profile.logs, key, now);
       if (doses.length) {
         lines.push(`<li><strong>${key}</strong><ul>`);
-        for (const dose of doses) lines.push(`<li>${dose.time} ${dose.medicine.name} — ${dose.status}</li>`);
+        for (const dose of doses) lines.push(`<li>${formatClock(dose.time, locale)} ${dose.medicine.name} — ${dose.status}</li>`);
         lines.push("</ul></li>");
       }
       key = shiftKey(key, 1);

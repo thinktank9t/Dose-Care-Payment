@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -16,8 +17,10 @@ import {
 } from "@/lib/care/schedule";
 import { DATE_LOCALE, formatNumber } from "@/lib/format";
 import type { ScheduledDose } from "@/lib/care/types";
-import { EmptyState, Icon, MedGlyph, Sheet } from "./chrome";
+import { DoseFlag, EmptyState, Icon, MedGlyph, Sheet } from "./chrome";
 import { useCare } from "./store";
+
+const UNDO_MS = 5000;
 
 export function TodayScreen() {
   const t = useTranslations("care");
@@ -26,10 +29,55 @@ export function TodayScreen() {
   const { profile, markDose, refill } = useCare();
   const now = new Date();
   const today = todayKey(now);
-  const doses = useMemo(
+  const saved = useMemo(
     () => scheduledDoses(profile.medicines, profile.logs, today, now),
     [profile.medicines, profile.logs, today, now],
   );
+
+  // A one-tap "taken" waits a few seconds before it is saved, so a stray tap
+  // can be undone before caregivers see it. Leaving the page saves it at once.
+  const [pending, setPending] = useState<ScheduledDose | null>(null);
+  const pendingRef = useRef<ScheduledDose | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const commitPending = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    const dose = pendingRef.current;
+    pendingRef.current = null;
+    setPending(null);
+    if (dose) markDose({ medicineId: dose.medicine.id, date: dose.date, time: dose.time, status: "taken" });
+  }, [markDose]);
+  const commitRef = useRef(commitPending);
+  commitRef.current = commitPending;
+  useEffect(() => {
+    // Reload or tab close skips React cleanup, so save on pagehide too.
+    // flushSync makes the store write to localStorage before the page goes.
+    const onHide = () => flushSync(() => commitRef.current());
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      commitRef.current();
+    };
+  }, []);
+
+  function markTakenWithUndo(dose: ScheduledDose) {
+    commitPending();
+    pendingRef.current = dose;
+    setPending(dose);
+    timerRef.current = setTimeout(() => commitRef.current(), UNDO_MS);
+  }
+  function undoPending() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    pendingRef.current = null;
+    setPending(null);
+  }
+
+  const doses = pending
+    ? saved.map((dose) =>
+        dose.medicine.id === pending.medicine.id && dose.time === pending.time ? { ...dose, status: "taken" as const } : dose,
+      )
+    : saved;
   const [sheet, setSheet] = useState<ScheduledDose | null>(null);
   const [refillId, setRefillId] = useState<string | null>(null);
   const [add, setAdd] = useState(10);
@@ -60,7 +108,7 @@ export function TodayScreen() {
       setSheet(dose);
       return;
     }
-    markDose({ medicineId: dose.medicine.id, date: dose.date, time: dose.time, status: "taken" });
+    markTakenWithUndo(dose);
   }
 
   return (
@@ -113,10 +161,10 @@ export function TodayScreen() {
               </button>
             ))}
             {low.map((med) => (
-              <button key={med.id} type="button" onClick={() => { setRefillId(med.id); setAdd(Math.max(1, med.packSize || 10)); }} className="flex w-full items-center gap-3 rounded-[18px] bg-warn-soft px-3 py-3 text-left">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-warn"><Icon name="battery" size={18} /></span>
+              <button key={med.id} type="button" onClick={() => { setRefillId(med.id); setAdd(Math.max(1, med.packSize || 10)); }} className="flex w-full items-center gap-3 rounded-[18px] bg-danger-soft px-3 py-3 text-left">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-danger"><Icon name="battery" size={18} /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium text-warn">{t("today.low", { name: med.name })}</span>
+                  <span className="block font-medium text-danger">{t("today.low", { name: med.name })}</span>
                   <span className="block text-small text-ink-2">{t("today.lowHint")}</span>
                 </span>
                 <Icon name="chevron" size={18} />
@@ -131,7 +179,7 @@ export function TodayScreen() {
               <h2 className="label-micro">{t("today.upNext", { count: formatNumber(upcoming.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {upcoming.map((dose) => (
-                  <DoseRow key={`${dose.medicine.id}-${dose.time}`} dose={dose} locale={locale} onOpen={() => openDose(dose)} missedLabel={t("today.missed")} />
+                  <DoseRow key={`${dose.medicine.id}-${dose.time}`} dose={dose} locale={locale} onOpen={() => openDose(dose)} />
                 ))}
               </ul>
             </section>
@@ -141,7 +189,7 @@ export function TodayScreen() {
               <h2 className="label-micro">{t("today.earlier", { count: formatNumber(earlier.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {earlier.map((dose) => (
-                  <DoseRow key={`${dose.medicine.id}-${dose.time}-e`} dose={dose} locale={locale} onOpen={() => openDose(dose)} missedLabel={t("today.missed")} />
+                  <DoseRow key={`${dose.medicine.id}-${dose.time}-e`} dose={dose} locale={locale} onOpen={() => openDose(dose)} />
                 ))}
               </ul>
             </section>
@@ -149,6 +197,20 @@ export function TodayScreen() {
           </div>
         </div>
       )}
+
+      {pending ? (
+        <div
+          role="status"
+          data-testid="dose-undo"
+          className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 mx-auto md:bottom-4 flex w-[calc(100%-2*var(--gutter))] max-w-md items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-bg"
+        >
+          <Icon name="check" size={18} />
+          <span className="min-w-0 flex-1 font-medium">{t("today.markedTaken", { name: pending.medicine.name })}</span>
+          <button type="button" onClick={undoPending} className="btn btn-sm shrink-0 border border-current text-bg">
+            {t("today.undo")}
+          </button>
+        </div>
+      ) : null}
 
       {sheet ? (
         <Sheet title={sheet.medicine.name} onClose={() => setSheet(null)}>
@@ -211,15 +273,12 @@ function DoseRow({
   dose,
   locale,
   onOpen,
-  missedLabel,
 }: {
   dose: ScheduledDose;
   locale: string;
   onOpen: () => void;
-  missedLabel: string;
 }) {
   const t = useTranslations("care");
-  const missed = dose.status === "skipped" || (dose.status === "due" && isPast(dose.date, dose.time, new Date()));
   const done = dose.status === "taken";
   const detail = dose.medicine.condition || (dose.medicine.food === "either" ? "" : t(`food.${dose.medicine.food}`));
   return (
@@ -229,7 +288,7 @@ function DoseRow({
         <span className="min-w-0 flex-1">
           <span className="block font-medium text-ink">{dose.medicine.name}</span>
           {detail ? <span className="block text-small text-ink-2">{detail}</span> : null}
-          {missed && !done ? <span className="pill mt-1 bg-warn-soft text-warn">{missedLabel}</span> : null}
+          <DoseFlag dose={dose} className="mt-1" />
         </span>
         <span className="text-small text-ink-2">{formatClock(dose.time, locale)}</span>
         <span className={`ml-1 flex h-6 w-6 items-center justify-center rounded-full border ${done ? "border-accent bg-accent text-on-accent" : "border-line"}`}>

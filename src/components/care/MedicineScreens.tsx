@@ -234,6 +234,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
 
 function TimesSheet({ med, personId, onClose }: { med: Medicine; personId?: string; onClose: () => void }) {
   const t = useTranslations("care");
+  const locale = useLocale() as Locale;
   const { saveMedicine } = useCare();
   const [times, setTimes] = useState(med.times);
   const [draft, setDraft] = useState("20:00");
@@ -242,7 +243,7 @@ function TimesSheet({ med, personId, onClose }: { med: Medicine; personId?: stri
       <ul className="space-y-2">
         {times.map((time) => (
           <li key={time} className="flex items-center justify-between rounded-xl border border-line px-3 py-2">
-            <span>{time}</span>
+            <span>{formatClock(time, locale)}</span>
             {times.length > 1 ? (
               <button type="button" aria-label={t("form.removeTime")} onClick={() => setTimes(times.filter((item) => item !== time))}><Icon name="close" size={16} /></button>
             ) : null}

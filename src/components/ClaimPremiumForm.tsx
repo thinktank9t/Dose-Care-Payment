@@ -36,7 +36,14 @@ type FieldErrors = { plan?: string; email?: string; trx?: string };
 /** Periods that already have a translated name in the `plans` namespace. */
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
 
-export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
+export function ClaimPremiumForm({
+  initialPlan,
+  defaultEmail,
+}: {
+  initialPlan?: string;
+  /** The signed-in Google email, so the user does not have to retype it. */
+  defaultEmail?: string | null;
+}) {
   const t = useTranslations("getPremium");
   const tp = useTranslations("plans");
   const locale = useLocale() as Locale;
@@ -44,7 +51,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
   const [plansState, setPlansState] = useState<PlansState>({ status: "loading" });
   const [period, setPeriod] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
+  const prefilledEmail = defaultEmail?.trim() ?? "";
+  const [email, setEmail] = useState(prefilledEmail);
   const [trxId, setTrxId] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +79,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
   const plans = plansState.status === "ready" ? plansState.plans : [];
   const selected = plans.find((p) => p.period === period) ?? null;
-  const disabled = plansState.status !== "ready" || plans.length === 0;
+  const numberUnset = !BKASH_NUMBER;
+  const disabled = numberUnset || plansState.status !== "ready" || plans.length === 0;
 
   const planName = (p: string) =>
     NAMED_PERIODS.has(p) ? tp(p) : p.charAt(0).toUpperCase() + p.slice(1);
@@ -119,8 +128,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
         period: result.plan_period ?? selected.period,
         until: result.premium_until ?? null,
       });
-      // Clear the form: the claim is spent and must not be sent twice.
-      setEmail("");
+      // Clear the TrxID: the claim is spent and must not be sent twice.
+      setEmail(prefilledEmail);
       setTrxId("");
       return;
     }
@@ -129,7 +138,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
     setSubmission({ kind: "error", text: mapped ?? result.message ?? t("errUnknown") });
   }
 
-  const amountBdt = selected ? formatBdt(selected.amount, locale) : t("amountPending");
+  const amountBdt = selected ? formatBdt(selected.amount, locale) : "—";
 
   return (
     <div className="space-y-6">
@@ -222,19 +231,31 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
       {/* Step 2 — pay with bKash */}
       <section className="card p-6">
         <Step n={2} title={t("step2")} locale={locale} />
-        <ol
-          className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
-            locale === "bn" ? "[list-style-type:bengali]" : ""
-          }`}
-        >
-          <li>{t.rich("instr1", { amount: amountBdt, number: BKASH_NUMBER, b })}</li>
-          <li>{t.rich("instr2", { b })}</li>
-          <li>{t.rich("instr3", { b })}</li>
-        </ol>
-        <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-          <InfoTile label={t("bkashNumber")} value={BKASH_NUMBER} copy />
-          <InfoTile label={t("amountToSend")} value={amountBdt} />
-        </dl>
+        {numberUnset ? (
+          <p className="mt-4 rounded-2xl bg-danger-soft px-4 py-4 text-small text-danger" role="alert" data-testid="claim-number-unset">
+            {t("errNumberUnset")}
+          </p>
+        ) : (
+          <>
+            <ol
+              className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
+                locale === "bn" ? "[list-style-type:bengali]" : ""
+              }`}
+            >
+              <li>
+                {selected
+                  ? t.rich("instr1", { amount: amountBdt, number: BKASH_NUMBER, b })
+                  : t.rich("instr1NoPlan", { number: BKASH_NUMBER, b })}
+              </li>
+              <li>{t.rich("instr2", { b })}</li>
+              <li>{t.rich("instr3", { b })}</li>
+            </ol>
+            <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+              <InfoTile label={t("bkashNumber")} value={BKASH_NUMBER} copy />
+              <InfoTile label={t("amountToSend")} value={amountBdt} />
+            </dl>
+          </>
+        )}
       </section>
 
       {/* Step 3 — activate */}
@@ -298,7 +319,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
                 </p>
               ) : (
                 <p id={`${fieldId}-email-hint`} className="mt-2 text-small text-ink-2">
-                  {t("emailHint")}
+                  {prefilledEmail ? t("emailHintPrefilled") : t("emailHint")}
                 </p>
               )}
             </div>

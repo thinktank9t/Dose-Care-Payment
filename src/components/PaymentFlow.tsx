@@ -41,6 +41,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
     status: "idle",
   });
 
+  const numberUnset = !bkash.number;
   const amount = prices[plan];
   const amountLabel = amount > 0 ? formatBdt(amount, locale) : tp("bdtUnset");
   const methodLabel = bkash.method === "payment" ? t("methodPayment") : t("methodSendMoney");
@@ -117,6 +118,12 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
       {/* Step 2: bKash instructions */}
       <section className="card p-6">
         <Step n={2} title={t("step2")} locale={locale} />
+        {numberUnset ? (
+          <p className="mt-4 rounded-2xl bg-danger-soft px-4 py-4 text-small text-danger" role="alert" data-testid="pay-number-unset">
+            {t("errNumberUnset")}
+          </p>
+        ) : (
+        <>
         <p className="mt-3 text-ink-2">{t("instructionsIntro")}</p>
         <ol
           className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
@@ -135,6 +142,8 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
           <InfoTile label={t("amount")} value={amountLabel} />
           <InfoTile label={t("yourReference")} value={reference} copy />
         </dl>
+        </>
+        )}
       </section>
 
       {/* Step 3: form */}
@@ -193,7 +202,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
             </p>
           ) : null}
 
-          <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={pending} data-testid="submit-trx">
+          <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={pending || numberUnset} data-testid="submit-trx">
             {pending ? <Spinner /> : null}
             {pending ? t("submitting") : t("submit")}
           </button>
