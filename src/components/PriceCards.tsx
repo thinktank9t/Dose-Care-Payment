@@ -1,5 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { formatBdt } from "@/lib/format";
 import {
   bestValuePeriod,
@@ -30,6 +31,7 @@ export function PriceCardsSkeleton() {
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
 
 export async function PriceCards() {
+  const locale = (await getLocale()) as Locale;
   const t = await getTranslations("plans");
   const tg = await getTranslations("getPremium");
 
@@ -101,13 +103,13 @@ export async function PriceCards() {
             <div>
               <p className="flex items-baseline gap-2">
                 <span className="font-heading text-[38px] leading-none text-ink">
-                  {formatBdt(plan.amount)}
+                  {formatBdt(plan.amount, locale)}
                 </span>
                 {per ? <span className="text-small text-ink-2">{per}</span> : null}
               </p>
               {saving > 0 ? (
                 <p className="mt-3 inline-flex rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent-ink">
-                  {t("savePerYear", { amount: formatBdt(saving) })}
+                  {t("savePerYear", { amount: formatBdt(saving, locale) })}
                 </p>
               ) : null}
             </div>

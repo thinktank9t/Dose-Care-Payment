@@ -24,7 +24,8 @@
     "themeDark": "Dark",
     "themeSystem": "Match system",
     "contrastHigh": "High contrast",
-    "contrastStandard": "Standard contrast"
+    "contrastStandard": "Standard contrast",
+    "openApp": "Open app"
   },
   "common": {
     "loading": "Loading…",
@@ -63,7 +64,6 @@
     "step2": "Pay with bKash",
     "step3": "Activate Premium",
     "planLabel": "Plan",
-    "amountPending": "Choose a plan first",
     "plansLoading": "Loading plans…",
     "plansError": "We couldn't load the plans right now. Please check your connection and try again.",
     "plansRetry": "Try again",
@@ -106,7 +106,10 @@
     "duration_day": "{count, plural, one {# day} other {# days}}",
     "duration_week": "{count, plural, one {# week} other {# weeks}}",
     "duration_month": "{count, plural, one {# month} other {# months}}",
-    "duration_year": "{count, plural, one {# year} other {# years}}"
+    "duration_year": "{count, plural, one {# year} other {# years}}",
+    "instr1NoPlan": "Choose a plan in step 1 to see how much to send to <b>{number}</b>.",
+    "emailHintPrefilled": "We filled in the email you signed in with. Change it only if the app uses a different Google account.",
+    "errNumberUnset": "Payments aren't open yet: no bKash number is set up. Please check back soon."
   },
   "checkStatus": {
     "title": "Check your Premium",
@@ -158,7 +161,7 @@
     "cta": "Get Premium",
     "ctaAccount": "View your plan",
     "secondaryCta": "See what's included",
-    "payWithBkash": "Pay with bKash · verified within 24 hours",
+    "payWithBkash": "Pay with bKash · Premium turns on straight away",
     "howLabel": "How it works",
     "howTitle": "Three simple steps",
     "step1Title": "Sign in with Google",
@@ -166,7 +169,7 @@
     "step2Title": "Pay with bKash",
     "step2Body": "Send the amount from your bKash app and copy the Transaction ID.",
     "step3Title": "Submit the TrxID",
-    "step3Body": "Paste it here. We verify it within 24 hours and Premium turns on in the app automatically.",
+    "step3Body": "Paste it on the Get Premium page. Premium turns on straight away, and the app picks it up the next time it opens.",
     "compareLabel": "Free vs Premium",
     "compareTitle": "What's included",
     "pricingLabel": "Pricing",
@@ -174,7 +177,7 @@
     "pricingNote": "Prices in Bangladeshi Taka. Pay with bKash — Premium turns on straight away.",
     "faqLabel": "Good to know",
     "faq1Q": "Do I need to do anything in the app?",
-    "faq1A": "No. The app checks your plan every time it opens. Once your payment is verified, Premium is simply there — and any paused caregivers come back.",
+    "faq1A": "No. The app checks your plan every time it opens. Once Premium is on, it is simply there — and any paused caregivers come back.",
     "faq2Q": "What if I pay while I'm already Premium?",
     "faq2A": "The new period is added on top of your current end date. Nothing is lost.",
     "faq3Q": "What happens when Premium ends?",
@@ -191,8 +194,8 @@
     "legal": "By continuing you agree to our <terms>Terms</terms> and <privacy>Privacy policy</privacy>."
   },
   "pay": {
-    "title": "Get Premium",
-    "subtitle": "Pay manually with bKash, then submit the Transaction ID.",
+    "title": "Send a payment for review",
+    "subtitle": "Pay with bKash and send us the Transaction ID. We check it within 24 hours, then Premium turns on in the app automatically.",
     "step1": "Choose a plan",
     "step2": "Pay with bKash",
     "step3": "Submit your Transaction ID",
@@ -233,10 +236,11 @@
     "errUnauthenticated": "Your session expired. Please sign in again.",
     "errUnknown": "Something went wrong. Please try again.",
     "pendingNotice": "You have {count, plural, one {# submission} other {# submissions}} waiting for review.",
-    "alreadyPremium": "You're on Premium until {date}. Paying now adds a new period on top."
+    "alreadyPremium": "You're on Premium until {date}. Paying now adds a new period on top.",
+    "errNumberUnset": "Payments aren't open yet: no bKash number is set up. Please check back soon."
   },
   "account": {
-    "title": "Your account",
+    "title": "Plan & payments",
     "yourPlan": "Your plan",
     "freePlan": "Free plan",
     "premium": "Premium",
@@ -318,7 +322,7 @@
   },
   "footer": {
     "tagline": "Medication reminders for families, kept on schedule.",
-    "payments": "Payments by bKash · verified within 24 hours.",
+    "payments": "Payments by bKash.",
     "productHeading": "Product",
     "legalHeading": "Company",
     "compare": "Free vs Premium",
@@ -377,15 +381,12 @@
       "legal": "By continuing, you agree to our <terms>Terms</terms> & <privacy>Privacy Policy</privacy>"
     },
     "setup": {
-      "step": "Step {step} of 4",
+      "step": "Step {step} of 3",
       "nameTitle": "What should we call you?",
       "nameLabel": "Your name",
       "namePlaceholder": "e.g. Sarah",
       "ageTitle": "How old are you?",
       "ageHint": "We use this only to keep reminders easy to read.",
-      "pickAge": "Choose your age",
-      "ageYears": "{count} years",
-      "languageTitle": "Which language do you prefer?",
       "bangla": "বাংলা",
       "english": "English",
       "whyTitle": "Why are you here?",
@@ -398,7 +399,8 @@
         "child": "I look after a child",
         "caregiver": "I'm a caregiver",
         "clinician": "I'm a nurse or doctor"
-      }
+      },
+      "ageLabel": "Your age in years"
     },
     "today": {
       "morning": "Good morning",
@@ -424,7 +426,11 @@
       "skip": "Skip dose",
       "refillHave": "{count} {unit} on hand",
       "refillAdd": "Add to stock",
-      "save": "Save refill"
+      "save": "Save refill",
+      "markedTaken": "Marked {name} as taken",
+      "undo": "Undo",
+      "late": "Late",
+      "skipped": "Skipped"
     },
     "unit": {
       "tablet": "tablet",
@@ -623,7 +629,8 @@
         "system": "System",
         "light": "Light",
         "dark": "Dark"
-      }
+      },
+      "plan": "Plan & payments"
     },
     "rx": {
       "title": "My prescriptions",

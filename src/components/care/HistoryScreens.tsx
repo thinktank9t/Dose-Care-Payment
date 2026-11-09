@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import {
   dayMark,
   formatClock,
@@ -12,13 +13,14 @@ import {
   scheduledDoses,
   todayKey,
 } from "@/lib/care/schedule";
+import { DATE_LOCALE, formatNumber, formatPercent } from "@/lib/format";
 import type { DoseLog, ScheduledDose } from "@/lib/care/types";
 import { Icon, ScreenHeader, Sheet } from "./chrome";
 import { useCare } from "./store";
 
 export function HistoryScreen() {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { profile } = useCare();
   const now = new Date();
@@ -26,9 +28,13 @@ export function HistoryScreen() {
   const [exportOpen, setExportOpen] = useState(false);
   const cells = monthGrid(cursor.year, cursor.month);
   const stats = monthStats(profile.medicines, profile.logs, cursor.year, cursor.month, now);
-  const title = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(cursor.year, cursor.month, 1));
+  const title = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+    month: "long",
+    year: "numeric",
+    ...(locale === "bn" ? { numberingSystem: "beng" as const } : null),
+  }).format(new Date(cursor.year, cursor.month, 1));
   const weekdays = Array.from({ length: 7 }, (_, index) =>
-    new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(2024, 0, index + 1)),
+    new Intl.DateTimeFormat(DATE_LOCALE[locale], { weekday: "narrow" }).format(new Date(2024, 0, index + 1)),
   );
 
   function shift(delta: number) {
@@ -46,7 +52,7 @@ export function HistoryScreen() {
       const doses = scheduledDoses(profile.medicines, profile.logs, key, now);
       if (doses.length) {
         lines.push(`<li><strong>${key}</strong><ul>`);
-        for (const dose of doses) lines.push(`<li>${dose.time} ${dose.medicine.name} — ${dose.status}</li>`);
+        for (const dose of doses) lines.push(`<li>${formatClock(dose.time, locale)} ${dose.medicine.name} — ${dose.status}</li>`);
         lines.push("</ul></li>");
       }
       key = shiftKey(key, 1);
@@ -92,7 +98,7 @@ export function HistoryScreen() {
                 "bg-bg-alt text-ink-2"
               }`}
             >
-              {day}
+              {formatNumber(day, locale)}
             </button>
           );
         })}
@@ -100,9 +106,9 @@ export function HistoryScreen() {
       </div>
       <div>
       <div className="grid grid-cols-3 gap-2">
-        <Stat value={`${stats.percent}%`} label={t("history.onTime")} />
-        <Stat value={String(stats.missed)} label={t("history.missed")} warn />
-        <Stat value={String(stats.streak)} label={t("history.streak")} />
+        <Stat value={formatPercent(stats.percent, locale)} label={t("history.onTime")} />
+        <Stat value={formatNumber(stats.missed, locale)} label={t("history.missed")} warn />
+        <Stat value={formatNumber(stats.streak, locale)} label={t("history.streak")} />
       </div>
       <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-ink-2">
         <li>{t("history.allTaken")}</li>

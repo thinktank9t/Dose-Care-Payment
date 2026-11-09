@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/routing";
-import { formatBdt, formatDate } from "@/lib/format";
+import { formatBdt, formatDate, formatNumber } from "@/lib/format";
 import { normalizeTrxId } from "@/lib/trx";
 import { supabaseAnon } from "@/lib/supabase/anon";
 import {
@@ -36,7 +36,14 @@ type FieldErrors = { plan?: string; email?: string; trx?: string };
 /** Periods that already have a translated name in the `plans` namespace. */
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
 
-export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
+export function ClaimPremiumForm({
+  initialPlan,
+  defaultEmail,
+}: {
+  initialPlan?: string;
+  /** The signed-in Google email, so the user does not have to retype it. */
+  defaultEmail?: string | null;
+}) {
   const t = useTranslations("getPremium");
   const tp = useTranslations("plans");
   const locale = useLocale() as Locale;
@@ -44,7 +51,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
   const [plansState, setPlansState] = useState<PlansState>({ status: "loading" });
   const [period, setPeriod] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
+  const prefilledEmail = defaultEmail?.trim() ?? "";
+  const [email, setEmail] = useState(prefilledEmail);
   const [trxId, setTrxId] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +79,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
   const plans = plansState.status === "ready" ? plansState.plans : [];
   const selected = plans.find((p) => p.period === period) ?? null;
-  const disabled = plansState.status !== "ready" || plans.length === 0;
+  const numberUnset = !BKASH_NUMBER;
+  const disabled = numberUnset || plansState.status !== "ready" || plans.length === 0;
 
   const planName = (p: string) =>
     NAMED_PERIODS.has(p) ? tp(p) : p.charAt(0).toUpperCase() + p.slice(1);
@@ -119,8 +128,8 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
         period: result.plan_period ?? selected.period,
         until: result.premium_until ?? null,
       });
-      // Clear the form: the claim is spent and must not be sent twice.
-      setEmail("");
+      // Clear the TrxID: the claim is spent and must not be sent twice.
+      setEmail(prefilledEmail);
       setTrxId("");
       return;
     }
@@ -129,13 +138,13 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
     setSubmission({ kind: "error", text: mapped ?? result.message ?? t("errUnknown") });
   }
 
-  const amountBdt = selected ? formatBdt(selected.amount) : t("amountPending");
+  const amountBdt = selected ? formatBdt(selected.amount, locale) : "—";
 
   return (
     <div className="space-y-6">
       {/* Step 1 — choose a plan */}
       <section className="card p-6">
-        <Step n={1} title={t("step1")} />
+        <Step n={1} title={t("step1")} locale={locale} />
 
         {plansState.status === "loading" ? (
           <div className="mt-4" role="status" aria-busy="true" data-testid="claim-plans-loading">
@@ -200,7 +209,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
                         <span className="font-medium text-ink">{planName(plan.period)}</span>
                       </span>
                       <span className="font-heading text-[20px] text-ink">
-                        {formatBdt(plan.amount)}
+                        {formatBdt(plan.amount, locale)}
                       </span>
                     </span>
                     <span className="pl-7 text-small text-ink-2">
@@ -221,21 +230,37 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
       {/* Step 2 — pay with bKash */}
       <section className="card p-6">
-        <Step n={2} title={t("step2")} />
-        <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3">
-          <li>{t.rich("instr1", { amount: amountBdt, number: BKASH_NUMBER, b })}</li>
-          <li>{t.rich("instr2", { b })}</li>
-          <li>{t.rich("instr3", { b })}</li>
-        </ol>
-        <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-          <InfoTile label={t("bkashNumber")} value={BKASH_NUMBER} copy />
-          <InfoTile label={t("amountToSend")} value={amountBdt} />
-        </dl>
+        <Step n={2} title={t("step2")} locale={locale} />
+        {numberUnset ? (
+          <p className="mt-4 rounded-2xl bg-danger-soft px-4 py-4 text-small text-danger" role="alert" data-testid="claim-number-unset">
+            {t("errNumberUnset")}
+          </p>
+        ) : (
+          <>
+            <ol
+              className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
+                locale === "bn" ? "[list-style-type:bengali]" : ""
+              }`}
+            >
+              <li>
+                {selected
+                  ? t.rich("instr1", { amount: amountBdt, number: BKASH_NUMBER, b })
+                  : t.rich("instr1NoPlan", { number: BKASH_NUMBER, b })}
+              </li>
+              <li>{t.rich("instr2", { b })}</li>
+              <li>{t.rich("instr3", { b })}</li>
+            </ol>
+            <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+              <InfoTile label={t("bkashNumber")} value={BKASH_NUMBER} copy />
+              <InfoTile label={t("amountToSend")} value={amountBdt} />
+            </dl>
+          </>
+        )}
       </section>
 
       {/* Step 3 — activate */}
       <section className="card p-6">
-        <Step n={3} title={t("step3")} />
+        <Step n={3} title={t("step3")} locale={locale} />
 
         {submission?.kind === "success" ? (
           <div className="mt-4" data-testid="claim-success" aria-live="polite">
@@ -294,7 +319,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
                 </p>
               ) : (
                 <p id={`${fieldId}-email-hint`} className="mt-2 text-small text-ink-2">
-                  {t("emailHint")}
+                  {prefilledEmail ? t("emailHintPrefilled") : t("emailHint")}
                 </p>
               )}
             </div>
@@ -363,11 +388,11 @@ function b(chunks: React.ReactNode) {
   return <strong className="text-ink">{chunks}</strong>;
 }
 
-function Step({ n, title }: { n: number; title: string }) {
+function Step({ n, title, locale }: { n: number; title: string; locale: Locale }) {
   return (
     <h2 className="flex items-center gap-3 text-[20px]">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[13px] text-accent-ink">
-        {n}
+        {formatNumber(n, locale)}
       </span>
       {title}
     </h2>

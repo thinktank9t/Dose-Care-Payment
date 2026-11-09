@@ -78,7 +78,7 @@ export async function Footer() {
             </p>
             <ul className="mt-4 space-y-2.5 text-small">
               <li>
-                <Link href="/#pricing" className={linkClass}>
+                <Link href="/premium#pricing" className={linkClass}>
                   {nav("pricing")}
                 </Link>
               </li>
@@ -93,7 +93,7 @@ export async function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#compare" className={linkClass}>
+                <Link href="/premium#compare" className={linkClass}>
                   {t("compare")}
                 </Link>
               </li>

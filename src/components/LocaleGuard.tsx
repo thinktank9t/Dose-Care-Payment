@@ -32,10 +32,17 @@ export function LocaleGuard() {
     if (!choice || choice === locale) return;
 
     const query = search.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      locale: choice,
-      scroll: false,
-    });
+    const href = query ? `${pathname}?${query}` : pathname;
+    const go = () =>
+      router.replace(href, {
+        locale: choice,
+        scroll: false,
+      });
+    const doc = document as Document & {
+      startViewTransition?: (callback: () => void) => unknown;
+    };
+    if (typeof doc.startViewTransition === "function") doc.startViewTransition(go);
+    else go();
   }, [locale, pathname, search, router]);
 
   return null;

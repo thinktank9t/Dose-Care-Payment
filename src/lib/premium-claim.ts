@@ -1,10 +1,11 @@
 import { supabaseAnon } from "@/lib/supabase/anon";
 
 /**
- * The bKash number users send money to. Change it here (or set
- * NEXT_PUBLIC_BKASH_NUMBER, which wins) — it is not repeated anywhere else.
+ * The bKash number users send money to, from NEXT_PUBLIC_BKASH_NUMBER.
+ * No fallback: a made-up default would send real money to a stranger, so an
+ * unset number makes the form refuse payments instead.
  */
-export const BKASH_NUMBER = process.env.NEXT_PUBLIC_BKASH_NUMBER || "01712345678";
+export const BKASH_NUMBER = process.env.NEXT_PUBLIC_BKASH_NUMBER?.trim() || "";
 
 /** A row of `plans`. `amount` is BDT; `duration` is a Postgres interval. */
 export type ClaimPlan = {

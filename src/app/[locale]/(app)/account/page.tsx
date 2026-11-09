@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -7,7 +6,6 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getRepo } from "@/lib/data/repo";
 import { planStatus } from "@/lib/plan-status";
 import { formatBdt, formatDate, formatDateTime, userReference } from "@/lib/format";
-import { signOut } from "@/lib/actions/auth";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Sparkle } from "@/components/Sparkle";
 import { StatusPill } from "@/components/StatusPill";
@@ -59,25 +57,11 @@ export default async function AccountPage({
   return (
     <div className="container-page py-12">
       <div className="max-w-2xl space-y-8">
-        {/* Profile */}
-        <section className="flex items-center gap-4">
-          {session.avatarUrl ?? user.avatar_url ? (
-            <Image
-              src={(session.avatarUrl ?? user.avatar_url) as string}
-              alt=""
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-full border border-line object-cover"
-            />
-          ) : (
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft font-heading text-[22px] text-accent-ink">
-              {(user.name || session.name || "?").slice(0, 1).toUpperCase()}
-            </span>
-          )}
-          <div className="min-w-0">
-            <h1 className="truncate text-[26px]">{user.name || session.name}</h1>
-            <p className="truncate text-small text-ink-2">{t("signedInAs", { email: user.email ?? session.email ?? "" })}</p>
-          </div>
+        {/* The person's name and sign-out live on Profile; this page is only
+            about the plan, so the app never shows two different names. */}
+        <section>
+          <h1>{t("title")}</h1>
+          <p className="mt-2 break-all text-small text-ink-2">{t("signedInAs", { email: user.email ?? session.email ?? "" })}</p>
         </section>
 
         {/* Plan card */}
@@ -121,7 +105,7 @@ export default async function AccountPage({
                     <div>
                       <p className="font-mono text-[16px] tracking-[0.1em] text-ink">{p.trx_id}</p>
                       <p className="mt-1 text-small text-ink-2">
-                        {tp(p.plan_period)} · {formatBdt(p.amount_bdt)}
+                        {tp(p.plan_period)} · {formatBdt(p.amount_bdt, locale)}
                       </p>
                     </div>
                     <StatusPill status={p.status} />
@@ -141,12 +125,6 @@ export default async function AccountPage({
             </ul>
           )}
         </section>
-
-        <form action={signOut}>
-          <button type="submit" className="btn btn-secondary btn-sm" data-testid="sign-out">
-            {t("signOut")}
-          </button>
-        </form>
       </div>
     </div>
   );

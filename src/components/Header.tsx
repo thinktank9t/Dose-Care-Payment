@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CONTRAST_COOKIE, THEME_COOKIE, parseContrast, parseTheme } from "@/lib/theme";
+import { getSession } from "@/lib/auth/session";
 import { AppearanceControls } from "./AppearanceControls";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Sparkle } from "./Sparkle";
@@ -12,6 +13,12 @@ export async function Header() {
   const jar = await cookies();
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
+  let signedIn = false;
+  try {
+    signedIn = Boolean(await getSession());
+  } catch {
+    signedIn = false;
+  }
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
       <a
@@ -29,19 +36,25 @@ export async function Header() {
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-4" aria-label={t("menu")}>
-          <Link href="/#pricing" className="hidden text-[14px] font-medium text-ink-2 hover:text-ink sm:inline">
+          <Link href="/premium#pricing" className="hidden text-[14px] font-medium text-ink-2 hover:text-ink sm:inline">
             {t("pricing")}
           </Link>
-          {/* Sign-in / Account / Admin links are intentionally not shown.
-              Those routes still exist and work; they are just unlinked. */}
           <Link
             href="/get-premium"
-            className="hidden whitespace-nowrap text-[14px] font-medium text-accent-ink hover:underline min-[360px]:inline"
+            className="hidden whitespace-nowrap text-[14px] font-medium text-accent-ink hover:underline sm:inline"
             data-testid="nav-get-premium"
           >
             {t("getPremium")}
           </Link>
           <AppearanceControls theme={theme} contrast={contrast} />
+          {/* The way into the app from the public pages. */}
+          <Link
+            href={signedIn ? "/" : "/sign-in?next=%2F"}
+            className="btn btn-secondary btn-sm whitespace-nowrap"
+            data-testid="nav-sign-in"
+          >
+            {signedIn ? t("openApp") : t("signIn")}
+          </Link>
           <Suspense fallback={null}>
             <LanguageSwitcher />
           </Suspense>

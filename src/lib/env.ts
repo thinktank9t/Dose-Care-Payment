@@ -41,7 +41,8 @@ export function bkashConfig() {
   const accountType = process.env.NEXT_PUBLIC_BKASH_ACCOUNT_TYPE;
   const method = process.env.NEXT_PUBLIC_BKASH_METHOD;
   return {
-    number: process.env.NEXT_PUBLIC_BKASH_NUMBER ?? "01XXXXXXXXX",
+    // Empty when unset: the pay page then refuses to show payment steps.
+    number: process.env.NEXT_PUBLIC_BKASH_NUMBER?.trim() || "",
     accountType: (accountType === "merchant"
       ? "merchant"
       : "personal") as BkashAccountType,

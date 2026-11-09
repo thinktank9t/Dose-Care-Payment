@@ -27,7 +27,9 @@ const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali"],
   weight: ["400", "500", "600"],
   variable: "--font-noto-bengali",
+  // Preload on every locale so EN→BN does not flash fallback glyphs.
   display: "swap",
+  preload: true,
 });
 
 export function generateStaticParams() {

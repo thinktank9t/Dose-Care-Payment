@@ -284,7 +284,7 @@ function LastPayment({ payment, locale }: { payment: StatusPayment | null; local
     <div className="mt-5 rounded-2xl bg-bg-alt/70 px-4 py-3">
       <p className="label-micro">{t("lastPaymentLabel")}</p>
       <p className="mt-1 text-small text-ink">
-        {payment.amount !== null ? formatBdt(payment.amount) : null}
+        {payment.amount !== null ? formatBdt(payment.amount, locale) : null}
         {payment.trx_id ? (
           <>
             {payment.amount !== null ? " · " : null}

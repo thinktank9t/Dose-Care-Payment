@@ -3,15 +3,18 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { signInWithGoogle } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
-import { formatClock, isPast, scheduledDoses, todayKey } from "@/lib/care/schedule";
+import { formatClock, scheduledDoses, todayKey } from "@/lib/care/schedule";
+import { localizeDigits } from "@/lib/format";
 import type { Permissions } from "@/lib/care/types";
-import { EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
+import { DoseFlag, EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
 export function CareScreen() {
   const t = useTranslations("care");
+  const locale = useLocale() as Locale;
   const { profile, setInvite, cancelRequest } = useCare();
   const [tab, setTab] = useState<"helping" | "care">("helping");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -85,7 +88,7 @@ export function CareScreen() {
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft font-heading text-accent-ink">{person.name.slice(0, 1)}</span>
                   <Link href={person.pending ? "/care" : `/care/${person.id}`} className="min-w-0 flex-1">
                     <span className="block font-medium">{person.name}</span>
-                    <span className="text-small text-ink-2">{person.pending ? t("carePage.pending") : t("carePage.medicinesCount", { count: person.medicines.length })}</span>
+                    <span className="text-small text-ink-2">{person.pending ? t("carePage.pending") : localizeDigits(t("carePage.medicinesCount", { count: person.medicines.length }), locale)}</span>
                   </Link>
                   {person.pending ? (
                     <button type="button" className="text-small font-medium text-warn" onClick={() => cancelRequest(person.id)}>{t("carePage.cancelRequest")}</button>
@@ -226,7 +229,7 @@ export function PersonScreen({ personId }: { personId: string }) {
               </span>
               {person.permissions.markDoses && dose.status !== "taken" ? (
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => markDose({ medicineId: dose.medicine.id, date: dose.date, time: dose.time, status: "taken", personId: person.id })}>{t("today.took")}</button>
-              ) : dose.status === "taken" ? <Icon name="check" size={18} /> : isPast(dose.date, dose.time) ? <span className="pill bg-warn-soft text-warn">{t("today.missed")}</span> : null}
+              ) : dose.status === "taken" ? <Icon name="check" size={18} /> : <DoseFlag dose={dose} />}
             </li>
           ))}
         </ul>

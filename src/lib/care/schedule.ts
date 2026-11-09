@@ -50,7 +50,21 @@ export function formatClock(time: string, locale: string): string {
   const [h, m] = time.split(":").map(Number);
   const date = new Date();
   date.setHours(h || 0, m || 0, 0, 0);
-  return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
+  // 12-hour in both languages. Bangla uses its own day periods
+  // (সকাল / দুপুর / বিকাল / সন্ধ্যা / রাত্রি) instead of a Latin "PM".
+  if (locale === "bn" || locale.startsWith("bn")) {
+    return new Intl.DateTimeFormat("bn-BD", {
+      hour: "numeric",
+      minute: "2-digit",
+      dayPeriod: "short",
+      numberingSystem: "beng",
+    }).format(date);
+  }
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
 }
 
 export function greetingKey(now = new Date()): "morning" | "afternoon" | "evening" {
@@ -99,7 +113,8 @@ export function scheduledDoses(
       });
     }
   }
-  return doses;
+  // Order across medicines too, so "Next" and "Up next" follow the clock.
+  return doses.sort((a, b) => a.time.localeCompare(b.time));
 }
 
 export function isLow(med: Medicine): boolean {
