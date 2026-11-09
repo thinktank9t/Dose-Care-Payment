@@ -7,6 +7,7 @@ import { signInWithGoogle } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
 import { locales, type Locale } from "@/i18n/routing";
 import { rememberLocaleChoice } from "@/i18n/locale-choice";
+import { formatNumber } from "@/lib/format";
 import { Icon, Sheet } from "./chrome";
 import { useCare } from "./store";
 
@@ -32,15 +33,12 @@ export function Onboarding() {
         </div>
         <form action={signInWithGoogle}>
           <input type="hidden" name="next" value="/" />
-          <button type="submit" className="btn btn-secondary w-full bg-surface" data-testid="google-sign-in">
+          <button type="submit" className="btn btn-primary w-full" data-testid="google-sign-in">
             <GoogleMark />
             {t("signIn.google")}
           </button>
         </form>
-        <button type="button" className="mt-4 min-h-12 text-[15px] font-medium text-ink-2" onClick={() => setPhase("name")} data-testid="onboarding-skip">
-          {t("signIn.skip")}
-        </button>
-        <p className="mt-3 text-center text-small text-ink-2">
+        <p className="mt-5 text-center text-small text-ink-2">
           {t.rich("signIn.legal", {
             terms: (chunks) => <Link href="/terms" className="underline">{chunks}</Link>,
             privacy: (chunks) => <Link href="/privacy" className="underline">{chunks}</Link>,
@@ -78,7 +76,7 @@ export function Onboarding() {
             <Icon name="back" />
           </button>
           <div className="flex-1">
-            <p className="label-micro">{t("setup.step", { step })}</p>
+            <p className="label-micro">{t("setup.step", { step: formatNumber(step, locale) })}</p>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               {[1, 2, 3, 4].map((n) => (
                 <span key={n} className={`h-1 rounded-full ${n <= step ? "bg-accent" : "bg-line"}`} />
@@ -98,7 +96,9 @@ export function Onboarding() {
             <h1 className="text-[30px]">{t("setup.ageTitle")}</h1>
             <p className="mt-2 text-ink-2">{t("setup.ageHint")}</p>
             <button type="button" className="field mt-6 w-full text-left" onClick={() => setAgeOpen(true)}>
-              {profile.age === null ? t("setup.pickAge") : t("setup.ageYears", { count: profile.age })}
+              {profile.age === null
+                ? t("setup.pickAge")
+                : t("setup.ageYears", { count: formatNumber(profile.age, locale) })}
             </button>
           </>
         )}
@@ -153,7 +153,7 @@ export function Onboarding() {
                     setAgeOpen(false);
                   }}
                 >
-                  {t("setup.ageYears", { count: age })}
+                  {t("setup.ageYears", { count: formatNumber(age, locale) })}
                 </button>
               ))}
             </div>

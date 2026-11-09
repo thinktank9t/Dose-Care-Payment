@@ -106,7 +106,7 @@ export default async function AdminPaymentsPage({
                   <td className="px-4 py-3">{tp(p.plan_period)}</td>
                   <td className="px-4 py-3 font-mono tracking-wider">{p.trx_id}</td>
                   <td className="px-4 py-3 font-mono">{p.sender_number ?? "—"}</td>
-                  <td className="px-4 py-3">{formatBdt(p.amount_bdt)}</td>
+                  <td className="px-4 py-3">{formatBdt(p.amount_bdt, locale)}</td>
                   <td className="px-4 py-3 text-ink-2">{formatDateTime(p.created_at, locale)}</td>
                   <td className="px-4 py-3">
                     <StatusPill status={p.status} />

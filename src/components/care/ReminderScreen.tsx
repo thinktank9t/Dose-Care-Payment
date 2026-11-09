@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { formatClock, isPast, scheduledDoses, todayKey } from "@/lib/care/schedule";
+import { formatNumber } from "@/lib/format";
 import type { ReminderStyle, ScheduledDose } from "@/lib/care/types";
 import { Icon, MedGlyph, Sheet } from "./chrome";
 import { useCare } from "./store";
 
 export function ReminderScreen({ medId, time }: { medId?: string; time?: string }) {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { profile, markDose, setReminderStyle } = useCare();
   const [styleOpen, setStyleOpen] = useState(false);
@@ -70,7 +72,7 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
       <div className="mt-3 grid grid-cols-3 gap-2">
         {[5, 10, 15].map((minutes) => (
           <button key={minutes} type="button" className="min-h-12 rounded-full bg-white/15" onClick={() => act(due, "snoozed", minutes)}>
-            {t("reminder.min", { count: minutes })}
+            {t("reminder.min", { count: formatNumber(minutes, locale) })}
           </button>
         ))}
       </div>

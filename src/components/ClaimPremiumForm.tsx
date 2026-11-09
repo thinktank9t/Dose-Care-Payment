@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/routing";
-import { formatBdt, formatDate } from "@/lib/format";
+import { formatBdt, formatDate, formatNumber } from "@/lib/format";
 import { normalizeTrxId } from "@/lib/trx";
 import { supabaseAnon } from "@/lib/supabase/anon";
 import {
@@ -129,13 +129,13 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
     setSubmission({ kind: "error", text: mapped ?? result.message ?? t("errUnknown") });
   }
 
-  const amountBdt = selected ? formatBdt(selected.amount) : t("amountPending");
+  const amountBdt = selected ? formatBdt(selected.amount, locale) : t("amountPending");
 
   return (
     <div className="space-y-6">
       {/* Step 1 — choose a plan */}
       <section className="card p-6">
-        <Step n={1} title={t("step1")} />
+        <Step n={1} title={t("step1")} locale={locale} />
 
         {plansState.status === "loading" ? (
           <div className="mt-4" role="status" aria-busy="true" data-testid="claim-plans-loading">
@@ -200,7 +200,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
                         <span className="font-medium text-ink">{planName(plan.period)}</span>
                       </span>
                       <span className="font-heading text-[20px] text-ink">
-                        {formatBdt(plan.amount)}
+                        {formatBdt(plan.amount, locale)}
                       </span>
                     </span>
                     <span className="pl-7 text-small text-ink-2">
@@ -221,8 +221,12 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
       {/* Step 2 — pay with bKash */}
       <section className="card p-6">
-        <Step n={2} title={t("step2")} />
-        <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3">
+        <Step n={2} title={t("step2")} locale={locale} />
+        <ol
+          className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
+            locale === "bn" ? "[list-style-type:bengali]" : ""
+          }`}
+        >
           <li>{t.rich("instr1", { amount: amountBdt, number: BKASH_NUMBER, b })}</li>
           <li>{t.rich("instr2", { b })}</li>
           <li>{t.rich("instr3", { b })}</li>
@@ -235,7 +239,7 @@ export function ClaimPremiumForm({ initialPlan }: { initialPlan?: string }) {
 
       {/* Step 3 — activate */}
       <section className="card p-6">
-        <Step n={3} title={t("step3")} />
+        <Step n={3} title={t("step3")} locale={locale} />
 
         {submission?.kind === "success" ? (
           <div className="mt-4" data-testid="claim-success" aria-live="polite">
@@ -363,11 +367,11 @@ function b(chunks: React.ReactNode) {
   return <strong className="text-ink">{chunks}</strong>;
 }
 
-function Step({ n, title }: { n: number; title: string }) {
+function Step({ n, title, locale }: { n: number; title: string; locale: Locale }) {
   return (
     <h2 className="flex items-center gap-3 text-[20px]">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[13px] text-accent-ink">
-        {n}
+        {formatNumber(n, locale)}
       </span>
       {title}
     </h2>

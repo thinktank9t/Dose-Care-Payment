@@ -50,7 +50,12 @@ export function formatClock(time: string, locale: string): string {
   const [h, m] = time.split(":").map(Number);
   const date = new Date();
   date.setHours(h || 0, m || 0, 0, 0);
-  return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
+  const tag = locale === "bn" || locale.startsWith("bn") ? "bn-BD" : locale === "en" ? "en-GB" : locale;
+  return new Intl.DateTimeFormat(tag, {
+    hour: "numeric",
+    minute: "2-digit",
+    ...(tag === "bn-BD" ? { numberingSystem: "beng" as const } : null),
+  }).format(date);
 }
 
 export function greetingKey(now = new Date()): "morning" | "afternoon" | "evening" {

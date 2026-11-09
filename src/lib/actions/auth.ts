@@ -5,23 +5,34 @@ import { cookies } from "next/headers";
 import { getLocale } from "next-intl/server";
 import { isFakeBackend, siteUrl } from "@/lib/env";
 import { safeNextPath } from "@/lib/auth/next-path";
-import { FAKE_SESSION_COOKIE } from "@/lib/auth/session";
+import { FAKE_SESSION_COOKIE, OAUTH_NEXT_COOKIE } from "@/lib/auth/session";
 import { encodeFakeSession } from "@/lib/auth/fake-identities";
 
 /** Google sign-in via Supabase Auth (PKCE). `next` is a locale-less path. */
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNextPath(String(formData.get("next") ?? ""));
   const locale = await getLocale();
-  const callback = `${siteUrl()}/auth/callback?next=${encodeURIComponent(`/${locale}${next}`)}`;
+  const afterAuth = `/${locale}${next}`;
+  // Exact callback URL (no query). Supabase Redirect URLs must allow this
+  // origin path; Google Cloud must allow Supabase's /auth/v1/callback.
+  const callback = `${siteUrl()}/auth/callback`;
+
+  const jar = await cookies();
+  jar.set(OAUTH_NEXT_COOKIE, afterAuth, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 10,
+  });
 
   if (isFakeBackend()) {
     // Test-only: the "Google" button signs in a fixed test user.
-    (await cookies()).set(FAKE_SESSION_COOKIE, encodeFakeSession("user"), {
+    jar.set(FAKE_SESSION_COOKIE, encodeFakeSession("user"), {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
     });
-    redirect(`/${locale}${next}`);
+    redirect(afterAuth);
   }
 
   const { supabaseServer } = await import("@/lib/supabase/server");
@@ -48,5 +59,5 @@ export async function signOut() {
     const supabase = await supabaseServer();
     await supabase.auth.signOut();
   }
-  redirect(`/${locale}`);
+  redirect(`/${locale}/sign-in`);
 }

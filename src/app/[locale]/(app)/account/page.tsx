@@ -121,7 +121,7 @@ export default async function AccountPage({
                     <div>
                       <p className="font-mono text-[16px] tracking-[0.1em] text-ink">{p.trx_id}</p>
                       <p className="mt-1 text-small text-ink-2">
-                        {tp(p.plan_period)} · {formatBdt(p.amount_bdt)}
+                        {tp(p.plan_period)} · {formatBdt(p.amount_bdt, locale)}
                       </p>
                     </div>
                     <StatusPill status={p.status} />

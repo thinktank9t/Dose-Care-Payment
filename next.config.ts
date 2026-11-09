@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
   // Our metadata is instant, so render it blocking in <head> for every UA
   // instead of streaming it into <body> (which Lighthouse/SEO tools miss).
   htmlLimitedBots: /.*/,
+  // Softens locale remounts (EN ↔ BN) via the View Transitions API.
+  experimental: {
+    viewTransition: true,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },

@@ -1,0 +1,6 @@
+{
+  "status": 302,
+  "app_redirectTo": "http://localhost:3000/auth/callback",
+  "redirect_uri": "https://zonvummielhetzcyootb.supabase.co/auth/v1/callback",
+  "client_id": "498654919373-ge2em6qhiffvi52c36ai7cgmo1lc187c.apps.googleusercontent.com"
+}

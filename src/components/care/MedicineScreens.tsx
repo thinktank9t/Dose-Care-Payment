@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import {
   MED_COLORS,
   blankMedicine,
@@ -13,6 +14,7 @@ import {
   unitKey,
   weekMarks,
 } from "@/lib/care/schedule";
+import { formatNumber, localizeDigits } from "@/lib/format";
 import type { AlertSound, Food, MedColor, MedForm, Medicine, Repeat } from "@/lib/care/types";
 import { EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
@@ -23,7 +25,7 @@ const WEEK = [1, 2, 3, 4, 5, 6, 0];
 
 export function MedicinesScreen() {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const { profile } = useCare();
   const [lowOnly, setLowOnly] = useState(false);
   const meds = lowOnly ? profile.medicines.filter(isLow) : profile.medicines;
@@ -33,7 +35,7 @@ export function MedicinesScreen() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1>{t("meds.title")}</h1>
-          <p className="mt-2 text-ink-2">{t("meds.count", { count: profile.medicines.length })}</p>
+          <p className="mt-2 text-ink-2">{localizeDigits(t("meds.count", { count: profile.medicines.length }), locale)}</p>
         </div>
         <button
           type="button"
@@ -68,7 +70,7 @@ export function MedicinesScreen() {
                   {med.condition ? <span className="mt-0.5 block text-small text-ink-2">{med.condition}</span> : null}
                   <span className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-small text-ink-2">
                     <span className="inline-flex items-center gap-1"><Icon name="clock" size={14} />{med.times.map((time) => formatClock(time, locale)).join(", ")}</span>
-                    <span>{scheduleLabel(med, t)}</span>
+                    <span>{scheduleLabel(med, t, locale)}</span>
                   </span>
                 </span>
               </Link>
@@ -91,15 +93,15 @@ function Status({ med }: { med: Medicine }) {
   );
 }
 
-function scheduleLabel(med: Medicine, t: ReturnType<typeof useTranslations<"care">>) {
+function scheduleLabel(med: Medicine, t: ReturnType<typeof useTranslations<"care">>, locale: Locale) {
   if (med.repeat === "weekly") return t("meds.weekly");
-  if (med.repeat === "custom") return t("meds.everyN", { count: med.intervalDays });
+  if (med.repeat === "custom") return t("meds.everyN", { count: formatNumber(med.intervalDays, locale) });
   return t("meds.everyDay");
 }
 
 export function MedicineDetail({ id, personId }: { id: string; personId?: string }) {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { ready, profile, setPaused, deleteMedicine, refill, setSupply } = useCare();
   const person = personId ? profile.people.find((item) => item.id === personId) : undefined;
@@ -146,7 +148,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
       <section className="card p-5">
         <div className="flex items-center justify-between">
           <p className="label-micro">{t("meds.thisWeek")}</p>
-          <p className="font-medium text-accent-ink">{t("meds.onTime", { count: percent })}</p>
+          <p className="font-medium text-accent-ink">{t("meds.onTime", { count: formatNumber(percent, locale) })}</p>
         </div>
         <div className="mt-3 grid grid-cols-7 gap-1 text-center">
           {marks.map((mark) => (
@@ -180,7 +182,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
             <li key={time} className="flex items-center gap-2">
               <Icon name="clock" size={16} />
               <span className="text-[18px]">{formatClock(time, locale)}</span>
-              <span className="text-small text-ink-2">{scheduleLabel(med, t)}</span>
+              <span className="text-small text-ink-2">{scheduleLabel(med, t, locale)}</span>
             </li>
           ))}
         </ul>
@@ -190,12 +192,12 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
         <button type="button" className="card mt-3 w-full p-4 text-left" onClick={() => canEdit && setRefillOpen(true)}>
           <div className="flex items-center justify-between">
             <p className="label-micro">{t("meds.refill")}</p>
-            <p className="text-small text-ink-2">{t("meds.units", { left: med.stock, pack: med.packSize || med.stock })}</p>
+            <p className="text-small text-ink-2">{t("meds.units", { left: formatNumber(med.stock, locale), pack: formatNumber(med.packSize || med.stock, locale) })}</p>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-alt">
             <div className={`h-full ${isLow(med) ? "bg-warn" : "bg-accent"}`} style={{ width: `${Math.min(100, med.packSize ? (med.stock / med.packSize) * 100 : 0)}%` }} />
           </div>
-          {supplyDays !== null && isLow(med) ? <p className="mt-2 text-small font-medium text-warn">{t("meds.daysLeft", { count: supplyDays })}</p> : null}
+          {supplyDays !== null && isLow(med) ? <p className="mt-2 text-small font-medium text-warn">{t("meds.daysLeft", { count: formatNumber(supplyDays, locale) })}</p> : null}
         </button>
       ) : null}
 
@@ -264,7 +266,7 @@ export function MedicineForm({
   personId?: string;
 }) {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { profile, saveMedicine } = useCare();
   const person = personId ? profile.people.find((item) => item.id === personId) : undefined;
@@ -287,7 +289,7 @@ export function MedicineForm({
     <div className="container-page py-8 lg:py-10">
     <div className="mx-auto max-w-3xl">
       <ScreenHeader
-        eyebrow={t("form.step", { step })}
+        eyebrow={t("form.step", { step: formatNumber(step, locale) })}
         title={step === 1 ? (existing ? t("form.editTitle") : t("form.addTitle")) : step === 2 ? t("form.when") : t("form.supplyTitle")}
         onBack={() => (step === 1 ? router.push(backTo) : setStep((value) => value - 1))}
       />
@@ -361,7 +363,7 @@ export function MedicineForm({
           ) : null}
           {med.repeat === "custom" ? (
             <button type="button" className="card flex w-full items-center justify-between p-4" onClick={() => setIntervalOpen(true)}>
-              <span>{t("meds.everyN", { count: med.intervalDays })}</span>
+              <span>{t("meds.everyN", { count: formatNumber(med.intervalDays, locale) })}</span>
               <Icon name="chevron" size={18} />
             </button>
           ) : null}
@@ -463,7 +465,7 @@ export function MedicineForm({
         <Sheet title={t("form.pickInterval")} onClose={() => setIntervalOpen(false)}>
           <div className="grid grid-cols-4 gap-2">
             {Array.from({ length: 30 }, (_, index) => index + 1).map((count) => (
-              <button key={count} type="button" className={`min-h-11 rounded-xl ${med.intervalDays === count ? "bg-accent text-on-accent" : "bg-bg-alt"}`} onClick={() => { patch({ intervalDays: count }); setIntervalOpen(false); }}>{count}</button>
+              <button key={count} type="button" className={`min-h-11 rounded-xl ${med.intervalDays === count ? "bg-accent text-on-accent" : "bg-bg-alt"}`} onClick={() => { patch({ intervalDays: count }); setIntervalOpen(false); }}>{formatNumber(count, locale)}</button>
             ))}
           </div>
         </Sheet>

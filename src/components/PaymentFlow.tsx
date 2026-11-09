@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { submitPayment, type SubmitState } from "@/lib/actions/payments";
 import type { BkashAccountType, BkashMethod } from "@/lib/env";
 import { PLAN_PERIODS, type PlanPeriod } from "@/lib/plans";
-import { formatBdt } from "@/lib/format";
+import { formatBdt, formatNumber } from "@/lib/format";
 import { normalizeTrxId } from "@/lib/trx";
 import { CopyButton } from "./CopyButton";
 import { Sparkle } from "./Sparkle";
@@ -33,6 +34,7 @@ const ERROR_KEY = {
 export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
   const t = useTranslations("pay");
   const tp = useTranslations("plans");
+  const locale = useLocale() as Locale;
   const [plan, setPlan] = useState<PlanPeriod>(initialPlan);
   const [trx, setTrx] = useState("");
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitPayment, {
@@ -40,7 +42,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
   });
 
   const amount = prices[plan];
-  const amountLabel = amount > 0 ? formatBdt(amount) : tp("bdtUnset");
+  const amountLabel = amount > 0 ? formatBdt(amount, locale) : tp("bdtUnset");
   const methodLabel = bkash.method === "payment" ? t("methodPayment") : t("methodSendMoney");
   const accountLabel = bkash.accountType === "merchant" ? t("accountMerchant") : t("accountPersonal");
 
@@ -80,7 +82,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
     <div className="space-y-6">
       {/* Step 1: plan */}
       <section className="card p-6">
-        <Step n={1} title={t("step1")} />
+        <Step n={1} title={t("step1")} locale={locale} />
         <div className="mt-4 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("planLabel")}>
           {PLAN_PERIODS.map((p) => {
             const selected = p === plan;
@@ -104,7 +106,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
                   <span className="font-medium text-ink">{tp(p)}</span>
                 </span>
                 <span className="font-heading text-[20px] text-ink">
-                  {prices[p] > 0 ? formatBdt(prices[p]) : "—"}
+                  {prices[p] > 0 ? formatBdt(prices[p], locale) : "—"}
                 </span>
               </label>
             );
@@ -114,9 +116,13 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
 
       {/* Step 2: bKash instructions */}
       <section className="card p-6">
-        <Step n={2} title={t("step2")} />
+        <Step n={2} title={t("step2")} locale={locale} />
         <p className="mt-3 text-ink-2">{t("instructionsIntro")}</p>
-        <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3">
+        <ol
+          className={`mt-4 list-decimal space-y-2 pl-5 text-ink-2 marker:text-ink-3 ${
+            locale === "bn" ? "[list-style-type:bengali]" : ""
+          }`}
+        >
           <li>{t.rich("instr1", { method: methodLabel, b })}</li>
           <li>{t.rich("instr2", { number: bkash.number, accountType: accountLabel, b })}</li>
           <li>{t.rich("instr3", { amount: amountLabel, b })}</li>
@@ -133,7 +139,7 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
 
       {/* Step 3: form */}
       <section className="card p-6">
-        <Step n={3} title={t("step3")} />
+        <Step n={3} title={t("step3")} locale={locale} />
         <form action={action} className="mt-4 space-y-5" noValidate aria-busy={pending}>
           <input type="hidden" name="planPeriod" value={plan} />
 
@@ -201,11 +207,11 @@ function b(chunks: React.ReactNode) {
   return <strong className="text-ink">{chunks}</strong>;
 }
 
-function Step({ n, title }: { n: number; title: string }) {
+function Step({ n, title, locale }: { n: number; title: string; locale: Locale }) {
   return (
     <h2 className="flex items-center gap-3 text-[20px]">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[13px] text-accent-ink">
-        {n}
+        {formatNumber(n, locale)}
       </span>
       {title}
     </h2>

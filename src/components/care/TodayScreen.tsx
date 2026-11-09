@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import {
   daysOfSupply,
   formatClock,
@@ -13,13 +14,14 @@ import {
   todayKey,
   unitKey,
 } from "@/lib/care/schedule";
+import { DATE_LOCALE, formatNumber } from "@/lib/format";
 import type { ScheduledDose } from "@/lib/care/types";
 import { EmptyState, Icon, MedGlyph, Sheet } from "./chrome";
 import { useCare } from "./store";
 
 export function TodayScreen() {
   const t = useTranslations("care");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { profile, markDose, refill } = useCare();
   const now = new Date();
@@ -40,7 +42,12 @@ export function TodayScreen() {
   const next = upcoming[0];
   const low = profile.medicines.filter(isLow);
   const percent = doses.length === 0 ? 0 : Math.round((taken / doses.length) * 100);
-  const dateLabel = new Intl.DateTimeFormat(locale, { weekday: "long", month: "long", day: "numeric" }).format(now);
+  const dateLabel = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    ...(locale === "bn" ? { numberingSystem: "beng" as const } : null),
+  }).format(now);
   const initial = (profile.name.trim()[0] || "D").toUpperCase();
   const refillMed = profile.medicines.find((med) => med.id === refillId) ?? null;
 
@@ -85,7 +92,7 @@ export function TodayScreen() {
                 <p className="text-[16px] font-medium text-ink">
                   {next ? t("today.next", { name: next.medicine.name, time: formatClock(next.time, locale) }) : t("today.allDone")}
                 </p>
-                <p className="text-small text-ink-2">{t("today.progress", { taken, left })}</p>
+                <p className="text-small text-ink-2">{t("today.progress", { taken: formatNumber(taken, locale), left: formatNumber(left, locale) })}</p>
               </div>
             </div>
             <Link href="/history" className="mt-3 flex min-h-11 items-center justify-between border-t border-line pt-3 font-medium text-accent-ink">
@@ -121,7 +128,7 @@ export function TodayScreen() {
           <div className="grid items-start gap-6 xl:grid-cols-2">
           {upcoming.length > 0 && (
             <section>
-              <h2 className="label-micro">{t("today.upNext", { count: upcoming.length })}</h2>
+              <h2 className="label-micro">{t("today.upNext", { count: formatNumber(upcoming.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {upcoming.map((dose) => (
                   <DoseRow key={`${dose.medicine.id}-${dose.time}`} dose={dose} locale={locale} onOpen={() => openDose(dose)} missedLabel={t("today.missed")} />
@@ -131,7 +138,7 @@ export function TodayScreen() {
           )}
           {earlier.length > 0 && (
             <section>
-              <h2 className="label-micro">{t("today.earlier", { count: earlier.length })}</h2>
+              <h2 className="label-micro">{t("today.earlier", { count: formatNumber(earlier.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {earlier.map((dose) => (
                   <DoseRow key={`${dose.medicine.id}-${dose.time}-e`} dose={dose} locale={locale} onOpen={() => openDose(dose)} missedLabel={t("today.missed")} />
@@ -162,8 +169,8 @@ export function TodayScreen() {
 
       {refillMed ? (
         <Sheet title={refillMed.name} onClose={() => setRefillId(null)}>
-          <p className="text-ink-2">{t("today.refillHave", { count: refillMed.stock, unit: t(`unit.${unitKey(refillMed.form)}`) })}</p>
-          {daysOfSupply(refillMed) !== null ? <p className="mt-1 text-small text-warn">{t("meds.daysLeft", { count: daysOfSupply(refillMed) ?? 0 })}</p> : null}
+          <p className="text-ink-2">{t("today.refillHave", { count: formatNumber(refillMed.stock, locale), unit: t(`unit.${unitKey(refillMed.form)}`) })}</p>
+          {daysOfSupply(refillMed) !== null ? <p className="mt-1 text-small text-warn">{t("meds.daysLeft", { count: formatNumber(daysOfSupply(refillMed) ?? 0, locale) })}</p> : null}
           <label className="mt-4 block text-small text-ink-2" htmlFor="refill-add">{t("today.refillAdd")}</label>
           <input id="refill-add" className="field mt-2 w-full" inputMode="numeric" value={add} onChange={(event) => setAdd(Number(event.target.value) || 0)} />
           <button type="button" className="btn btn-primary mt-4 w-full" onClick={() => { refill(refillMed.id, Math.max(0, add)); setRefillId(null); }}>

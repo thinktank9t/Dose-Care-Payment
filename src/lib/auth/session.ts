@@ -14,6 +14,8 @@ export type Session = {
 };
 
 export const FAKE_SESSION_COOKIE = "dc_fake_session";
+/** Short-lived path to open after Google OAuth (avoids query on redirectTo). */
+export const OAUTH_NEXT_COOKIE = "dc_oauth_next";
 
 async function readFakeSession(): Promise<Session | null> {
   const raw = (await cookies()).get(FAKE_SESSION_COOKIE)?.value;
