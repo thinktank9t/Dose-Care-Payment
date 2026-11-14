@@ -424,7 +424,7 @@ export function EmptyState({
       <p className="mx-auto mt-2 max-w-[40ch] text-ink-2">{body}</p>
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
       {tips && tips.length ? (
-        <ul className="mt-8 grid gap-5 border-t border-line pt-6 text-left sm:grid-cols-3 sm:gap-6">
+        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-5 border-t border-line pt-6 text-left sm:grid-cols-3 sm:gap-6">
           {tips.map((tip) => (
             <li key={tip.title} className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink">

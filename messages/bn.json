@@ -442,7 +442,8 @@
       "skipped": "বাদ দেওয়া",
       "markTaken": "খেয়েছি",
       "markTakenLabel": "{name} খেয়েছি বলে লিখুন",
-      "doneLabel": "খাওয়া হয়েছে"
+      "doneLabel": "খাওয়া হয়েছে",
+      "noneDueBody": "আজ আপনার কোনো ওষুধের ডোজ নেই।"
     },
     "unit": {
       "tablet": "ট্যাবলেট",

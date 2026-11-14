@@ -132,7 +132,9 @@ export function TodayScreen() {
         </Link>
       </div>
 
-      {doses.length === 0 ? (
+      {doses.length === 0 && profile.medicines.length === 0 ? (
+        // Brand new: the card carries the one "Add medicine" button (the
+        // floating one is hidden while there are no medicines).
         <EmptyState
           icon={<Icon name="bell" size={42} />}
           title={t("today.emptyTitle")}
@@ -140,8 +142,12 @@ export function TodayScreen() {
           action={<Link href="/medicines/new" className="btn btn-primary" data-testid="empty-add"><Icon name="plus" size={20} strokeWidth={2} />{t("today.add")}</Link>}
           tips={starterTips(t)}
         />
+      ) : doses.length === 0 ? (
+        // Has medicines, none due today: say so. The floating button stays the
+        // only "Add medicine", so two never overlap.
+        <EmptyState icon={<Icon name="check" size={42} />} title={t("today.emptyTitle")} body={t("today.noneDueBody")} />
       ) : (
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           <div>
           <section className="card px-4 py-5">
             <div className="flex items-center gap-3">
@@ -183,7 +189,7 @@ export function TodayScreen() {
           </div>
 
           </div>
-          <div className="grid items-start gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-2">
           {upcoming.length > 0 && (
             <section>
               <h2 className={SECTION_TITLE}>{t("today.upNext", { count: formatNumber(upcoming.length, locale) })}</h2>
