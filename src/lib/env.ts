@@ -77,8 +77,16 @@ export function isFakeBackend(): boolean {
   return true;
 }
 
+/**
+ * Read at request time. A direct `process.env.NAME` access is baked into the
+ * server bundle at build, so a later Vercel env change never reaches production.
+ */
+function readEnv(name: string): string {
+  return (process.env[name] ?? "").trim();
+}
+
 export function serviceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = readEnv("SUPABASE_SERVICE_ROLE_KEY");
   if (!key) {
     throw new Error(
       "SUPABASE_SERVICE_ROLE_KEY is not set. It is required on the server.",
@@ -88,8 +96,8 @@ export function serviceRoleKey(): string {
 }
 
 export function supabasePublicConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = readEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const anonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   if (!url || !anonKey) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.",
