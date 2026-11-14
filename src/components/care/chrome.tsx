@@ -264,9 +264,11 @@ export function Toggle({
     >
       {/* 32px track inside a 44px hit area. The knob moves by transform and
           keeps a 3px inset at both ends, so it never touches the border. */}
-      <span className={`relative block h-8 w-[52px] rounded-full border transition-colors ${on ? "border-accent bg-accent" : "border-line bg-bg-alt"}`}>
+      {/* Off: a tinted track with a solid ink-2 border and knob, so the switch
+          reads clearly on dark surfaces too (a surface-coloured knob vanished). */}
+      <span className={`relative block h-8 w-[52px] rounded-full border-2 transition-colors ${on ? "border-accent bg-accent" : "track-off border-ink-2"}`}>
         <span
-          className={`absolute left-[3px] top-[3px] h-6 w-6 rounded-full bg-surface shadow-[0_1px_2px_rgba(15,28,36,0.2)] transition-transform ${on ? "translate-x-5" : "translate-x-0"}`}
+          className={`absolute left-[2px] top-[2px] h-6 w-6 rounded-full shadow-[0_1px_2px_rgba(15,28,36,0.2)] transition-[transform,background-color] ${on ? "translate-x-5 bg-surface" : "translate-x-0 bg-ink-2"}`}
         />
       </span>
     </button>
