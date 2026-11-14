@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -27,6 +28,13 @@ export function PriceCardsSkeleton() {
   );
 }
 
+/**
+ * Plans change rarely, and the landing page renders on every visit (it reads
+ * cookies), so keep the lookup for 5 minutes instead of querying Supabase each
+ * time. A failed lookup throws and is not cached.
+ */
+const cachedPlans = unstable_cache(fetchActivePlans, ["active-plans"], { revalidate: 300 });
+
 /** Periods that already have translated copy in the `plans` namespace. */
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
 
@@ -38,7 +46,7 @@ export async function PriceCards() {
   let plans: ClaimPlan[] = [];
   let failed = false;
   try {
-    plans = await fetchActivePlans();
+    plans = await cachedPlans();
   } catch {
     // Never let a pricing lookup take the landing page down.
     failed = true;

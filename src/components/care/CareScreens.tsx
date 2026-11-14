@@ -71,7 +71,7 @@ export function CareScreen() {
         </>
       ) : (
         <>
-          <Link href="/care/join" className="card mt-4 flex items-center gap-3 p-4" onClick={(event) => { if (!profile.signedIn) { event.preventDefault(); setSignOpen(true); } }}>
+          <Link href="/care/join" data-no-loader className="card mt-4 flex items-center gap-3 p-4" onClick={(event) => { if (!profile.signedIn) { event.preventDefault(); setSignOpen(true); } }}>
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent-ink"><Icon name="plus" size={18} /></span>
             <span className="min-w-0 flex-1">
               <span className="block font-medium">{t("carePage.join")}</span>

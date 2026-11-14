@@ -10,6 +10,7 @@ import { siteUrl } from "@/lib/env";
 import { CONTRAST_COOKIE, TEXT_COOKIE, THEME_COOKIE, parseContrast, parseText, parseTheme } from "@/lib/theme";
 import { LocaleGuard } from "@/components/LocaleGuard";
 import { AppearanceSync } from "@/components/AppearanceSync";
+import { TopLoader } from "@/components/TopLoader";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -106,6 +107,9 @@ export default async function LocaleLayout({
             <LocaleGuard />
           </Suspense>
           <AppearanceSync />
+          <Suspense fallback={null}>
+            <TopLoader />
+          </Suspense>
           {children}
         </NextIntlClientProvider>
       </body>

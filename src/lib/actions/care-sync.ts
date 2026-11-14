@@ -63,12 +63,22 @@ async function loadMedicines(db: Awaited<ReturnType<typeof supabaseServer>>, pat
   if (error) throw new Error(error.message);
   const rows = (medRows ?? []) as unknown as DbMedicine[];
   const ids = rows.map((row) => row.id);
-  const { data: schedules } = ids.length
-    ? await db
-        .from("dose_schedules")
-        .select("medicine_id,times_json,frequency_type,days_of_week,interval_hours,is_paused,dose_quantity")
-        .in("medicine_id", ids)
-    : { data: [] };
+  // Schedules and dose logs only need the medicine ids: fetch them together.
+  const [{ data: schedules }, { data: doseRows }] = await Promise.all([
+    ids.length
+      ? db
+          .from("dose_schedules")
+          .select("medicine_id,times_json,frequency_type,days_of_week,interval_hours,is_paused,dose_quantity")
+          .in("medicine_id", ids)
+      : Promise.resolve({ data: [] }),
+    ids.length
+      ? db
+          .from("dose_logs")
+          .select("medicine_id,scheduled_date,scheduled_time,status,snooze_until")
+          .in("medicine_id", ids)
+          .gte("scheduled_date", sinceDays(120))
+      : Promise.resolve({ data: [] }),
+  ]);
   const scheduleByMed = new Map<string, DbSchedule>();
   for (const row of (schedules ?? []) as DbSchedule[]) {
     if (!scheduleByMed.has(row.medicine_id)) scheduleByMed.set(row.medicine_id, row);
@@ -77,13 +87,6 @@ async function loadMedicines(db: Awaited<ReturnType<typeof supabaseServer>>, pat
     patientId: row.patient_id,
     medicine: medicineFromRows(row, scheduleByMed.get(row.id)),
   }));
-  const { data: doseRows } = ids.length
-    ? await db
-        .from("dose_logs")
-        .select("medicine_id,scheduled_date,scheduled_time,status,snooze_until")
-        .in("medicine_id", ids)
-        .gte("scheduled_date", sinceDays(120))
-    : { data: [] };
   const logs = ((doseRows ?? []) as DbDose[]).map(logFromDb).filter((row): row is DoseLog => row !== null);
   const byPatient = new Map<string, Medicine[]>();
   for (const item of mapped) {
@@ -99,26 +102,33 @@ export async function pullCare(): Promise<RemoteCare | null> {
   const ctx = await context();
   if (!ctx) return null;
   const { db, userId } = ctx;
-  const { data: user, error } = await db.from("users").select("name,age,usage_reasons").eq("id", userId).maybeSingle();
+  // These four only need the user id, so they go out together instead of one
+  // after another (each round trip to the database is the slow part).
+  const [{ data: user, error }, own, { data: inviteRows }, { data: caredRows }] = await Promise.all([
+    db.from("users").select("name,age,usage_reasons").eq("id", userId).maybeSingle(),
+    loadMedicines(db, [userId]),
+    db
+      .from("caregiver_links")
+      .select("invite_code")
+      .eq("patient_id", userId)
+      .eq("status", "pending")
+      .not("invite_code", "is", null)
+      .limit(1),
+    db
+      .from("caregiver_links")
+      .select("id,patient_id,caregiver_user_id,status,permissions,invite_code")
+      .eq("caregiver_user_id", userId)
+      .in("status", ["requested", "active"]),
+  ]);
   if (error) throw new Error(error.message);
 
-  const own = await loadMedicines(db, [userId]);
-  const { data: inviteRows } = await db
-    .from("caregiver_links")
-    .select("invite_code")
-    .eq("patient_id", userId)
-    .eq("status", "pending")
-    .not("invite_code", "is", null)
-    .limit(1);
-  const { data: caredRows } = await db
-    .from("caregiver_links")
-    .select("id,patient_id,caregiver_user_id,status,permissions,invite_code")
-    .eq("caregiver_user_id", userId)
-    .in("status", ["requested", "active"]);
   const cared = (caredRows ?? []) as DbLink[];
-  const caredBundle = await loadMedicines(db, cared.filter((link) => link.status === "active").map((link) => link.patient_id));
   const nameIds = cared.map((link) => link.patient_id);
-  const { data: names } = nameIds.length ? await db.from("users").select("id,name").in("id", nameIds) : { data: [] };
+  // The people I care for: their medicines and their names, also in parallel.
+  const [caredBundle, { data: names }] = await Promise.all([
+    loadMedicines(db, cared.filter((link) => link.status === "active").map((link) => link.patient_id)),
+    nameIds.length ? db.from("users").select("id,name").in("id", nameIds) : Promise.resolve({ data: [] }),
+  ]);
   const nameOf = new Map((names ?? []).map((row) => [(row as { id: string }).id, (row as { name: string }).name]));
   const reasons = Array.isArray((user as { usage_reasons?: string[] } | null)?.usage_reasons)
     ? (user as { usage_reasons: string[] }).usage_reasons
