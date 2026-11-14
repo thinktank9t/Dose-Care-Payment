@@ -63,7 +63,7 @@ export function MedicinesScreen() {
       ) : meds.length === 0 ? (
         <p className="mt-8 text-center text-ink-2">{t("meds.noneLow")}</p>
       ) : (
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           {meds.map((med) => (
             <li key={med.id}>
               <Link href={`/medicines/${med.id}`} className="card flex items-start gap-3 p-4">
@@ -148,7 +148,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
         </div>
       </div>
 
-      <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2">
       <section className="card p-5">
         <div className="flex items-center justify-between">
           <p className="label-micro">{t("meds.thisWeek")}</p>

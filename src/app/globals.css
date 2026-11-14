@@ -233,7 +233,9 @@ html[lang="bn"] body {
   width: 100%;
   max-width: 1040px;
   margin-inline: auto;
-  padding-inline: var(--gutter);
+  /* The gutter, or the notch / rounded-corner inset in landscape if larger. */
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
 }
 
 @utility label-micro {

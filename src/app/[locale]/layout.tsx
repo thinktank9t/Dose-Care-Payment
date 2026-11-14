@@ -52,12 +52,18 @@ export async function generateMetadata({
       languages: { en: "/en", bn: "/bn" },
     },
     openGraph: { title: t("premium"), description: t("description"), type: "website" },
+    // iOS Safari would otherwise turn emails, phone numbers and addresses into
+    // underlined links (the profile email, bKash numbers).
+    formatDetection: { email: false, telephone: false, address: false },
   };
 }
 
 export async function generateViewport(): Promise<Viewport> {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const shared = { width: "device-width", initialScale: 1 } as const;
+  // viewport-fit=cover: draw edge to edge on iPhone so the fixed tab bar can sit
+  // on the real bottom edge (its padding adds the safe-area inset), instead of
+  // Safari leaving an unpainted band below it when its toolbar collapses.
+  const shared = { width: "device-width", initialScale: 1, viewportFit: "cover" } as const;
   if (theme === "light") return { ...shared, themeColor: "#F3F6F8" };
   if (theme === "dark") return { ...shared, themeColor: "#0B141A" };
   return {

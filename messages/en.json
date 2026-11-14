@@ -442,7 +442,8 @@
       "skipped": "Skipped",
       "markTaken": "Taken",
       "markTakenLabel": "Mark {name} as taken",
-      "doneLabel": "Taken"
+      "doneLabel": "Taken",
+      "noneDueBody": "None of your medicines are due today."
     },
     "unit": {
       "tablet": "tablet",

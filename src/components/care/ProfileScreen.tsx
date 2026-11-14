@@ -51,13 +51,13 @@ export function ProfileScreen({
   return (
     <div className="container-page py-8 lg:py-10">
       <h1>{t("profile.title")}</h1>
-      <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-2">
       <div>
       <section className="card flex items-center gap-3 p-5">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft font-heading text-[24px] text-accent-ink">{initial}</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[18px] font-medium">{profile.name.trim() || t("today.friend")}</span>
-          <span className="text-small text-ink-2">{profile.signedIn ? session?.email || t("profile.personal") : t("profile.guest")}</span>
+          <span className="block text-[18px] font-medium [overflow-wrap:anywhere]">{profile.name.trim() || t("today.friend")}</span>
+          <span className="block text-small text-ink-2 [overflow-wrap:anywhere]">{profile.signedIn ? session?.email || t("profile.personal") : t("profile.guest")}</span>
         </span>
         <button type="button" className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-accent-soft px-5 font-medium text-accent-ink" onClick={() => { setDraft(profile.name); setEdit(true); }}>{t("profile.edit")}</button>
       </section>

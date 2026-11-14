@@ -51,7 +51,7 @@ export function PrescriptionsScreen() {
       {profile.prescriptions.length === 0 ? (
         <EmptyState icon={<Icon name="star" size={36} />} title={t("rx.emptyTitle")} body={t("rx.emptyBody")} />
       ) : (
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           {profile.prescriptions.map((rx) => (
             <li key={rx.id}>
               <button type="button" className="card flex w-full items-center justify-between p-4 text-left" onClick={() => router.push(`/prescriptions/${rx.id}`)}>

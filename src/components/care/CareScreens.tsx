@@ -82,7 +82,7 @@ export function CareScreen() {
           {profile.people.length === 0 ? (
             <EmptyState icon={<Icon name="user" size={40} />} title={t("carePage.emptyCareTitle")} body={t("carePage.emptyCareBody")} />
           ) : (
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
               {profile.people.map((person) => (
                 <li key={person.id} className="card flex items-center gap-3 p-4">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft font-heading text-accent-ink">{person.name.slice(0, 1)}</span>
