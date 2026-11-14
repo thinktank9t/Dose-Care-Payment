@@ -44,7 +44,13 @@
     "reminders": "Reminders and schedules",
     "caregivers": "Caregivers",
     "patients": "Patients you care for",
-    "prescriptions": "Stored prescriptions"
+    "prescriptions": "Stored prescriptions",
+    "people": "{count, plural, one {# person} other {# people}}",
+    "upTo": "Up to {count, number}",
+    "remindersHint": "Dose times with a gentle alert",
+    "caregiversHint": "Family who can see and mark your doses",
+    "patientsHint": "People you look after in the app",
+    "prescriptionsHint": "Prescription photos you keep"
   },
   "plans": {
     "monthly": "Monthly",

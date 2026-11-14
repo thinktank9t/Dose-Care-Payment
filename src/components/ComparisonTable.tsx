@@ -1,11 +1,13 @@
 import { useTranslations } from "next-intl";
-import { FEATURE_ROWS } from "@/lib/plans";
+import { FEATURE_ROWS, type FeatureValue } from "@/lib/plans";
 import { Sparkle } from "./Sparkle";
 
-function cell(t: ReturnType<typeof useTranslations<"features">>, v: string) {
+/** "1 person" / "১ জন", "Up to 3" / "সর্বোচ্চ ৩টি": numbers in the page's own digits. */
+function cell(t: ReturnType<typeof useTranslations<"features">>, v: FeatureValue) {
   if (v === "included") return t("included");
   if (v === "unlimited") return t("unlimited");
-  return v;
+  if ("people" in v) return t("people", { count: v.people });
+  return t("upTo", { count: v.upTo });
 }
 
 /**
@@ -43,8 +45,9 @@ export function ComparisonTable({ bare = false }: { bare?: boolean } = {}) {
         <tbody>
           {FEATURE_ROWS.map((row) => (
             <tr key={row.key} className="border-b border-line last:border-b-0">
-              <th scope="row" className="py-4 pr-2 text-left font-medium text-ink">
-                {t(row.key)}
+              <th scope="row" className="py-4 pr-2 text-left font-normal">
+                <span className="block font-medium text-ink">{t(row.key)}</span>
+                <span className="mt-0.5 block text-small text-ink-2">{t(`${row.key}Hint`)}</span>
               </th>
               <td className="whitespace-nowrap px-1 py-4 text-center text-ink-2">{cell(t, row.free)}</td>
               <td className="whitespace-nowrap py-4 pl-1 text-center font-semibold text-accent-ink">

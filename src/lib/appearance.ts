@@ -12,6 +12,12 @@ const YEAR = 60 * 60 * 24 * 365;
 
 /** Fired on window whenever the theme changes, so every control stays in sync. */
 export const THEME_EVENT = "dc:theme";
+/** Fired after any appearance change (theme, contrast, text size). See AppearanceSync. */
+export const APPEARANCE_EVENT = "dc:appearance";
+
+function announce() {
+  window.dispatchEvent(new Event(APPEARANCE_EVENT));
+}
 
 /** Page background per theme, for the browser chrome (theme-color). */
 const THEME_BG = { light: "#F3F6F8", dark: "#0B141A" } as const;
@@ -34,6 +40,7 @@ export function applyTheme(next: ThemeChoice) {
   const bg = THEME_BG[effectiveTheme()];
   document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.setAttribute("content", bg));
   window.dispatchEvent(new CustomEvent<ThemeChoice>(THEME_EVENT, { detail: next }));
+  announce();
 }
 
 type ViewTransitionDoc = Document & {
@@ -84,10 +91,12 @@ export function applyContrast(high: boolean) {
   writeCookie(CONTRAST_COOKIE, high ? "high" : null);
   if (high) document.documentElement.dataset.contrast = "high";
   else delete document.documentElement.dataset.contrast;
+  announce();
 }
 
 /** 1 / 1.15 / 1.3, the same steps as the app's text-size control. */
 export function applyTextScale(scale: TextScale) {
   writeCookie(TEXT_COOKIE, scale === "1" ? null : scale);
   document.documentElement.style.fontSize = scale === "1" ? "" : `${Number(scale) * 100}%`;
+  announce();
 }
