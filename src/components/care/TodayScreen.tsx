@@ -99,6 +99,9 @@ export function TodayScreen() {
   const earlier = doses.filter((dose) => isPast(today, dose.time, now) || dose.status === "taken" || dose.status === "skipped");
   const overdue = doses.filter((dose) => dose.status !== "taken" && dose.status !== "skipped" && dose.status !== "snoozed" && isPast(today, dose.time, now));
   const next = upcoming[0];
+  // Nothing left later today, but earlier doses neither taken nor skipped:
+  // that is not "all done", it is "confirm these".
+  const unresolved = doses.filter((dose) => dose.status !== "taken" && dose.status !== "skipped").length;
   const low = profile.medicines.filter(isLow);
   const percent = doses.length === 0 ? 0 : Math.round((taken / doses.length) * 100);
   const dateLabel = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
@@ -154,7 +157,11 @@ export function TodayScreen() {
               <Progress value={percent} />
               <div className="min-w-0">
                 <p className="text-[16px] font-medium text-ink">
-                  {next ? t("today.next", { name: next.medicine.name, time: formatClock(next.time, locale) }) : t("today.allDone")}
+                  {next
+                    ? t("today.next", { name: next.medicine.name, time: formatClock(next.time, locale) })
+                    : unresolved > 0
+                      ? t("today.toConfirm", { count: unresolved })
+                      : t("today.allDone")}
                 </p>
                 <p className="text-small text-ink-2">{t("today.progress", { taken: formatNumber(taken, locale), left: formatNumber(left, locale) })}</p>
               </div>

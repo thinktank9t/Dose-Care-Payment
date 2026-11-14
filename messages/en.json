@@ -350,7 +350,8 @@
     "errorTitle": "Something went wrong",
     "errorBody": "An unexpected error occurred. Please try again.",
     "retry": "Try again",
-    "home": "Go to home page"
+    "home": "Go to home page",
+    "code": "Error code: {digest}"
   },
   "care": {
     "tabs": {
@@ -443,7 +444,8 @@
       "markTaken": "Taken",
       "markTakenLabel": "Mark {name} as taken",
       "doneLabel": "Taken",
-      "noneDueBody": "None of your medicines are due today."
+      "noneDueBody": "None of your medicines are due today.",
+      "toConfirm": "{count, plural, one {# dose to confirm} other {# doses to confirm}}"
     },
     "unit": {
       "tablet": "tablet",
