@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { MED_COLORS, isPast } from "@/lib/care/schedule";
@@ -215,7 +216,11 @@ export function Sheet({
   }, [onClose]);
 
   const t = useTranslations("care");
-  return (
+  // Rendered into <body>: <main> is its own stacking context (isolate, for the
+  // backdrop), so a sheet left inside it would sit under the floating button
+  // and tab bar no matter its z-index. Sheets only open after a tap, so
+  // `document` always exists here.
+  return createPortal(
     // Phones: a bottom sheet resting on the tab bar (--tabbar-h, 0 when there
     // is none). md and up: the centered dialog.
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(15,28,36,0.46)] md:items-center md:p-4" onClick={onClose}>
@@ -234,7 +239,8 @@ export function Sheet({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

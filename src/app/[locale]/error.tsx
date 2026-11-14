@@ -14,6 +14,13 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       <div className="card w-full max-w-md p-8 text-center">
         <h1 className="text-[28px]">{t("errorTitle")}</h1>
         <p className="mt-3 text-ink-2">{t("errorBody")}</p>
+        {/* In production Next hides the message; the digest matches the server
+            log line (search it in the Vercel logs) without exposing details. */}
+        {error.digest ? (
+          <p className="mt-2 font-mono text-[12px] text-ink-2" data-testid="error-digest">
+            {t("code", { digest: error.digest })}
+          </p>
+        ) : null}
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <button type="button" onClick={reset} className="btn btn-primary">
             {t("retry")}
