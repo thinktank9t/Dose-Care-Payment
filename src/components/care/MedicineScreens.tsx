@@ -10,6 +10,7 @@ import {
   daysOfSupply,
   formatClock,
   isLow,
+  scheduledDoses,
   todayKey,
   unitKey,
   weekMarks,
@@ -32,7 +33,8 @@ export function MedicinesScreen() {
 
   return (
     <div className="container-page py-8 lg:py-10">
-      <div className="flex items-end justify-between gap-4">
+      <div className="relative flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+        <MedsArt />
         <div>
           <h1>{t("meds.title")}</h1>
           <p className="mt-2 text-ink-2">{localizeDigits(t("meds.count", { count: profile.medicines.length }), locale)}</p>
@@ -44,11 +46,13 @@ export function MedicinesScreen() {
             type="button"
             aria-pressed={lowOnly}
             onClick={() => setLowOnly((value) => !value)}
-            className={`inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-[14px] font-medium ${lowOnly ? "bg-danger-soft text-danger" : "bg-accent-soft text-accent-ink"}`}
+            className={`inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[14px] font-medium transition-colors ${
+              lowOnly ? "border-danger bg-danger-soft text-danger" : "border-line bg-surface text-ink-2 hover:text-ink"
+            }`}
             data-testid="filter-low"
           >
-            <Icon name="battery" size={20} />
-            {t("meds.low")}
+            <Icon name="battery" size={18} />
+            {t("meds.lowOnly")}
           </button>
         ) : null}
       </div>
@@ -61,25 +65,12 @@ export function MedicinesScreen() {
           tips={starterTips(t)}
         />
       ) : meds.length === 0 ? (
-        <p className="mt-8 text-center text-ink-2">{t("meds.noneLow")}</p>
+        <p className="card mt-8 p-6 text-center text-ink-2">{t("meds.noneLow")}</p>
       ) : (
-        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2 xl:grid-cols-3">
           {meds.map((med) => (
             <li key={med.id}>
-              <Link href={`/medicines/${med.id}`} className="card flex items-start gap-3 p-4">
-                <MedGlyph form={med.form} color={med.color} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-start justify-between gap-2">
-                    <span className="font-medium text-ink">{med.name}</span>
-                    <Status med={med} />
-                  </span>
-                  {med.condition ? <span className="mt-0.5 block text-small text-ink-2">{med.condition}</span> : null}
-                  <span className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-small text-ink-2">
-                    <span className="inline-flex items-center gap-1"><Icon name="clock" size={14} />{med.times.map((time) => formatClock(time, locale)).join(", ")}</span>
-                    <span>{scheduleLabel(med, t, locale)}</span>
-                  </span>
-                </span>
-              </Link>
+              <MedicineCard med={med} />
             </li>
           ))}
         </ul>
@@ -88,15 +79,91 @@ export function MedicinesScreen() {
   );
 }
 
-function Status({ med }: { med: Medicine }) {
+/**
+ * One medicine in the list: what it is and how much (top), when it is taken
+ * and how much is left (bottom). Only an exception gets a pill (low stock or
+ * paused); "active" is the normal state and needs no label.
+ */
+function MedicineCard({ med }: { med: Medicine }) {
   const t = useTranslations("care");
-  if (med.paused) return <span className="pill bg-bg-alt text-ink-2">{t("meds.paused")}</span>;
+  const locale = useLocale() as Locale;
+  const low = isLow(med);
+  const unit = t(`unit.${unitKey(med.form)}`);
+  const note = conditionNote(med.condition);
   return (
-    <span className="flex flex-col items-end gap-1">
-      <span className="pill bg-accent-soft text-accent-ink">{t("meds.active")}</span>
-      {isLow(med) ? <span className="pill bg-warn-soft text-warn">{t("meds.low")}</span> : null}
-    </span>
+    <Link
+      href={`/medicines/${med.id}`}
+      className={`card flex h-full flex-col gap-4 p-4 transition-colors hover:border-ink-2 ${med.paused ? "opacity-75" : ""}`}
+    >
+      <span className="flex items-start gap-3">
+        <MedGlyph form={med.form} color={med.color} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[17px] font-medium text-ink">{med.name}</span>
+          <span className="mt-0.5 block text-small text-ink-2">{t("meds.doseLine", { count: med.amount, unit })}</span>
+          {note ? <span className="mt-0.5 block truncate text-small text-ink-2">{t("meds.forCondition", { condition: note })}</span> : null}
+        </span>
+        {med.paused ? <span className="pill shrink-0 bg-bg-alt text-ink-2">{t("meds.paused")}</span> : null}
+        <span aria-hidden className="mt-1 shrink-0 text-ink-2"><Icon name="chevron" size={18} /></span>
+      </span>
+      <span className="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-3 text-small text-ink-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-alt px-2.5 py-1">
+          <Icon name="clock" size={14} />
+          {med.times.map((time) => formatClock(time, locale)).join(", ")}
+        </span>
+        <span className="rounded-full bg-bg-alt px-2.5 py-1">{scheduleLabel(med, t, locale)}</span>
+        {med.trackSupply ? (
+          <span className={`rounded-full px-2.5 py-1 ${low ? "bg-danger-soft text-danger" : "bg-bg-alt"}`}>
+            {low ? t("meds.lowLeft", { count: med.stock }) : t("meds.left", { count: med.stock })}
+          </span>
+        ) : null}
+      </span>
+    </Link>
   );
+}
+
+/** Answers that only mean "nothing to say" (typed into the optional
+ *  condition field, often in the phone app) are not worth showing. */
+const EMPTY_ANSWERS = new Set(["no", "none", "n/a", "na", "nil", "-", "--", ".", "না", "নেই", "কিছু না"]);
+
+function conditionNote(value: string): string | null {
+  const text = value.trim();
+  return text && !EMPTY_ANSWERS.has(text.toLowerCase()) ? text : null;
+}
+
+/**
+ * Faint line art behind the page title (wider screens only): a pill, a
+ * capsule, a clock and a sparkle in the app's icon style, drifting slowly.
+ * Uses the shared .backdrop-art motion, so reduced motion stops it and high
+ * contrast hides it.
+ */
+function MedsArt() {
+  return (
+    <svg
+      aria-hidden
+      className="backdrop-art meds-art pointer-events-none absolute -top-6 right-48 -z-10 hidden h-[150px] w-[360px] text-accent md:block"
+      viewBox="0 0 360 150"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    >
+      <g transform="rotate(-28 70 80)">
+        <rect x="24" y="60" width="92" height="38" rx="19" />
+        <path d="M70 60v38" />
+      </g>
+      <circle cx="176" cy="54" r="26" />
+      <path d="M158 72l36-36" />
+      <circle cx="268" cy="86" r="40" />
+      <circle cx="268" cy="86" r="52" strokeDasharray="3 9" />
+      <path d="M268 62v24l16 10" />
+      <path d="M150 116l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" />
+      <path d="M338 22l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" />
+    </svg>
+  );
+}
+
+function formIcon(form: MedForm) {
+  return form === "capsule" ? "capsule" : form === "liquid" ? "drop" : form === "injection" ? "syringe" : "pill";
 }
 
 function scheduleLabel(med: Medicine, t: ReturnType<typeof useTranslations<"care">>, locale: Locale) {
@@ -109,7 +176,7 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
   const t = useTranslations("care");
   const locale = useLocale() as Locale;
   const router = useRouter();
-  const { ready, profile, setPaused, deleteMedicine, refill, setSupply } = useCare();
+  const { ready, profile, setPaused, deleteMedicine, refill, setSupply, markDose } = useCare();
   const person = personId ? profile.people.find((item) => item.id === personId) : undefined;
   const med = (person ? person.medicines : profile.medicines).find((item) => item.id === id);
   const logs = personId ? profile.personLogs[personId] ?? [] : profile.logs;
@@ -123,6 +190,16 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
     return <p className="px-5 py-10 text-ink-2">{t("meds.missing")}</p>;
   }
   const canEdit = !person || person.permissions.editMedicines;
+  const canMark = !person || person.permissions.markDoses;
+  const today = todayKey();
+  const todayDoses = scheduledDoses([med], logs, today);
+  const note = conditionNote(med.condition);
+  // One plain sentence instead of a bare note: how much, how often, with food or not.
+  const summary = [
+    t("meds.doseLine", { count: med.amount, unit: t(`unit.${unitKey(med.form)}`) }),
+    scheduleLabel(med, t, locale),
+    med.food === "either" ? t("meds.anyFood") : t(`food.${med.food}`),
+  ].join(" · ");
   const base = personId ? `/care/${personId}` : "/medicines";
   const supplyDays = daysOfSupply(med);
   const taken = marks.filter((mark) => mark.state === "done").length;
@@ -133,7 +210,16 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
     <div className="container-page py-8 lg:py-10">
       <div className="flex items-center justify-between">
         <BackButton onClick={() => router.push(personId ? `/care/${personId}` : "/medicines")} label={t("common.back")} />
-        {canEdit ? <Link href={`${base}/edit/${med.id}`} className="-mr-2 inline-flex min-h-11 items-center px-2 font-medium text-accent-ink">{t("meds.edit")}</Link> : <span />}
+        {canEdit ? (
+          <Link
+            href={`${base}/edit/${med.id}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-[14px] font-medium text-ink transition-colors hover:border-accent hover:text-accent-ink"
+            data-testid="med-edit"
+          >
+            <Icon name="edit" size={18} />
+            {t("meds.editMedicine")}
+          </Link>
+        ) : <span />}
       </div>
       <div className="mt-4 flex items-center gap-3">
         <MedGlyph form={med.form} color={med.color} size={56} />
@@ -143,7 +229,8 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
             {isLow(med) ? <span className="pill bg-warn-soft text-warn">{t("meds.low")}</span> : null}
           </div>
           <h1 className="mt-2 text-[30px]">{med.name}</h1>
-          {med.condition ? <p className="text-ink-2">{med.condition}</p> : null}
+          <p className="text-ink-2">{summary}</p>
+          {note ? <p className="text-small text-ink-2">{t("meds.forCondition", { condition: note })}</p> : null}
           {person ? <p className="text-small text-ink-2">{t("meds.forPerson", { name: person.name })}</p> : null}
         </div>
       </div>
@@ -157,13 +244,15 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
         <div className="mt-3 grid grid-cols-7 gap-1 text-center">
           {marks.map((mark) => (
             <div key={mark.key}>
-              <span className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-[11px] ${
+              {/* A taken day is filled with the medicine's own glyph. */}
+              <span className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-[11px] ${
                 mark.state === "done" ? "bg-accent text-on-accent" :
                 mark.state === "missed" ? "bg-warn-soft text-warn" :
-                mark.state === "today" ? "border border-dashed border-accent text-accent-ink" :
+                mark.state === "some" ? "bg-pending-soft text-pending" :
+                mark.state === "today" ? "border-2 border-dashed border-accent text-accent-ink" :
                 "bg-bg-alt text-ink-3"
               }`}>
-                {mark.state === "done" ? <Icon name="check" size={14} /> : ""}
+                {mark.state === "done" || mark.state === "some" ? <Icon name={formIcon(med.form)} size={18} strokeWidth={2} /> : mark.state === "missed" ? <Icon name="close" size={14} strokeWidth={2} /> : ""}
               </span>
               <span className="mt-1 block text-[11px] text-ink-3">
                 {new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(`${mark.key}T12:00:00`))}
@@ -171,10 +260,70 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
             </div>
           ))}
         </div>
+        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-2">
+          <li className="flex items-center gap-1.5"><span aria-hidden className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-on-accent"><Icon name={formIcon(med.form)} size={10} strokeWidth={2.4} /></span>{t("meds.keyTaken")}</li>
+          <li className="flex items-center gap-1.5"><span aria-hidden className="h-4 w-4 rounded-full bg-warn-soft" />{t("meds.keyMissed")}</li>
+          <li className="flex items-center gap-1.5"><span aria-hidden className="h-4 w-4 rounded-full border-2 border-dashed border-accent" />{t("meds.keyToday")}</li>
+        </ul>
       </section>
 
       <div>
-      <section className="card p-5">
+      {/* Where a dose gets recorded: each of today's times, with Taken / Skip. */}
+      <section className="card p-5" data-testid="med-today">
+        <p className="label-micro">{t("meds.todayDoses")}</p>
+        {todayDoses.length === 0 || med.paused ? (
+          <p className="mt-3 text-ink-2">{t("meds.notToday")}</p>
+        ) : (
+          <>
+            <ul className="mt-3 divide-y divide-line">
+              {todayDoses.map((dose) => {
+                const done = dose.status === "taken";
+                const skipped = dose.status === "skipped";
+                return (
+                  <li key={dose.time} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                    <span className="flex items-center gap-3">
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-full ${done ? "bg-accent text-on-accent" : "bg-bg-alt text-ink-2"}`}>
+                        <Icon name={done ? formIcon(med.form) : "clock"} size={18} strokeWidth={done ? 2 : 1.6} />
+                      </span>
+                      <span>
+                        <span className="block text-[17px] font-medium">{formatClock(dose.time, locale)}</span>
+                        <span className={`block text-small ${done ? "text-accent-ink" : skipped ? "text-warn" : "text-ink-2"}`}>
+                          {done ? t("meds.statusTaken") : skipped ? t("meds.statusSkipped") : t("meds.statusDue")}
+                        </span>
+                      </span>
+                    </span>
+                    {canMark ? (
+                      <span className="flex gap-2">
+                        <button
+                          type="button"
+                          aria-pressed={skipped}
+                          className={`btn btn-sm ${skipped ? "bg-warn-soft text-warn" : "btn-secondary"}`}
+                          onClick={() => markDose({ medicineId: med.id, date: today, time: dose.time, status: "skipped", personId })}
+                        >
+                          {t("meds.markSkip")}
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={done}
+                          className={`btn btn-sm ${done ? "bg-accent-soft text-accent-ink" : "btn-primary"}`}
+                          onClick={() => markDose({ medicineId: med.id, date: today, time: dose.time, status: "taken", personId })}
+                          data-testid="med-taken"
+                        >
+                          <Icon name="check" size={16} strokeWidth={2} />
+                          {t("meds.markTaken")}
+                        </button>
+                      </span>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-small text-ink-2">{t("meds.todayHint")}</p>
+          </>
+        )}
+      </section>
+
+      <section className="card mt-3 p-5">
         <div className="flex items-center justify-between">
           <p className="label-micro">{t("meds.schedule")}</p>
           {canEdit ? (
@@ -460,16 +609,28 @@ export function MedicineForm({
       {/* Sticks to the bottom, directly above the tab bar, so the main action
           is always reachable and never sits under the bar. The solid band
           lets the fields scroll behind it. */}
-      <div className={STICKY_ACTION}>
-        {step < 3 ? (
-          <button type="button" className="btn btn-primary w-full" disabled={step === 1 && !med.name.trim()} onClick={() => setStep((value) => value + 1)}>
-            {step === 1 ? t("form.continueSchedule") : t("form.continueSupply")}
+      <div className={`${STICKY_ACTION} md:mt-10 md:border-t md:border-line md:pt-6`}>
+        {/* A standard form footer: Back on the left, the step's main action
+            on the right. On a phone the two share one row. */}
+        <div className="flex items-center gap-3 md:justify-between">
+          <button
+            type="button"
+            className="btn btn-secondary shrink-0 px-5"
+            onClick={() => (step === 1 ? router.push(backTo) : setStep((value) => value - 1))}
+          >
+            {t("common.back")}
           </button>
-        ) : (
-          <button type="button" className="btn btn-primary w-full" onClick={save}>
-            <Icon name="check" size={18} /> {t("form.save")}
-          </button>
-        )}
+          {step < 3 ? (
+            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" disabled={step === 1 && !med.name.trim()} onClick={() => setStep((value) => value + 1)}>
+              {step === 1 ? t("form.continueSchedule") : t("form.continueSupply")}
+              <Icon name="chevron" size={18} />
+            </button>
+          ) : (
+            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" onClick={save}>
+              <Icon name="check" size={18} /> {t("form.save")}
+            </button>
+          )}
+        </div>
       </div>
 
       {soundOpen ? (
