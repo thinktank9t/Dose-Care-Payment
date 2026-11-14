@@ -1,6 +1,8 @@
 /** Appearance cookies. Absent theme means follow the OS ("System"). */
 export const THEME_COOKIE = "dc-theme";
-export const CONTRAST_COOKIE = "dc-contrast";
+// Renamed from "dc-contrast" so everyone starts with high contrast off again
+// (it had been switched on while testing); anyone who wants it turns it back on.
+export const CONTRAST_COOKIE = "dc-contrast-v2";
 export const TEXT_COOKIE = "dc-text";
 
 export const TEXT_SCALES = ["1", "1.15", "1.3"] as const;

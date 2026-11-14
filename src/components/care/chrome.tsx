@@ -62,7 +62,8 @@ export function Icon({
     | "star"
     | "hearts"
     | "snooze"
-    | "alert";
+    | "alert"
+    | "edit";
   size?: number;
   strokeWidth?: number;
 }) {
@@ -126,6 +127,7 @@ export function Icon({
       )}
       {name === "chevron" && <path d="m9 6 6 6-6 6" />}
       {name === "check" && <path d="m5.5 12.5 4 4 9-9" />}
+      {name === "edit" && <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z M13.5 6.5l4 4" />}
       {name === "close" && <path d="m7 7 10 10M17 7 7 17" />}
       {name === "clock" && (
         <>
