@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/lib/env";
 import { CONTRAST_COOKIE, TEXT_COOKIE, THEME_COOKIE, parseContrast, parseText, parseTheme } from "@/lib/theme";
 import { LocaleGuard } from "@/components/LocaleGuard";
+import { AppearanceSync } from "@/components/AppearanceSync";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
           <Suspense fallback={null}>
             <LocaleGuard />
           </Suspense>
+          <AppearanceSync />
           {children}
         </NextIntlClientProvider>
       </body>

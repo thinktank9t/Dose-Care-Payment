@@ -44,7 +44,13 @@
     "reminders": "রিমাইন্ডার ও সময়সূচি",
     "caregivers": "কেয়ারগিভার",
     "patients": "যাদের যত্ন নেন",
-    "prescriptions": "সংরক্ষিত প্রেসক্রিপশন"
+    "prescriptions": "সংরক্ষিত প্রেসক্রিপশন",
+    "people": "{count, number} জন",
+    "upTo": "সর্বোচ্চ {count, number}টি",
+    "remindersHint": "ডোজের সময়, মৃদু সতর্কতা সহ",
+    "caregiversHint": "পরিবারের যারা আপনার ডোজ দেখতে ও চিহ্নিত করতে পারেন",
+    "patientsHint": "অ্যাপে যাদের দেখাশোনা করেন",
+    "prescriptionsHint": "যে প্রেসক্রিপশনের ছবি রাখেন"
   },
   "plans": {
     "monthly": "মাসিক",

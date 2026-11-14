@@ -24,10 +24,19 @@ export function bdtPrices(): Record<PlanPeriod, number> {
   };
 }
 
-/** Feature comparison table. Strings are i18n keys under `features`. */
-export const FEATURE_ROWS = [
+/**
+ * Feature comparison table. Strings are i18n keys under `features`. A value
+ * is "included", "unlimited", or a limit with its unit, so the cell can say
+ * "1 person" / "Up to 3" rather than a bare number.
+ */
+export type FeatureValue = "included" | "unlimited" | { people: number } | { upTo: number };
+export const FEATURE_ROWS: readonly {
+  key: "reminders" | "caregivers" | "patients" | "prescriptions";
+  free: FeatureValue;
+  premium: FeatureValue;
+}[] = [
   { key: "reminders", free: "included", premium: "included" },
-  { key: "caregivers", free: "1", premium: "unlimited" },
-  { key: "patients", free: "1", premium: "unlimited" },
-  { key: "prescriptions", free: "3", premium: "unlimited" },
-] as const;
+  { key: "caregivers", free: { people: 1 }, premium: "unlimited" },
+  { key: "patients", free: { people: 1 }, premium: "unlimited" },
+  { key: "prescriptions", free: { upTo: 3 }, premium: "unlimited" },
+];
