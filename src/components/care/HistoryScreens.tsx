@@ -18,6 +18,15 @@ import type { DoseLog, ScheduledDose } from "@/lib/care/types";
 import { Icon, ScreenHeader, Sheet } from "./chrome";
 import { useCare } from "./store";
 
+/** Calendar key: each label next to a swatch styled like the matching day. */
+const LEGEND = [
+  ["history.allTaken", "bg-accent-soft"],
+  ["history.someMissed", "bg-pending-soft"],
+  ["history.mostMissed", "bg-warn-soft"],
+  ["history.nothing", "bg-bg-alt border border-line"],
+  ["history.today", "border border-ink bg-surface"],
+] as const;
+
 export function HistoryScreen() {
   const t = useTranslations("care");
   const locale = useLocale() as Locale;
@@ -110,12 +119,13 @@ export function HistoryScreen() {
         <Stat value={formatNumber(stats.missed, locale)} label={t("history.missed")} warn />
         <Stat value={formatNumber(stats.streak, locale)} label={t("history.streak")} />
       </div>
-      <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-ink-2">
-        <li>{t("history.allTaken")}</li>
-        <li>{t("history.someMissed")}</li>
-        <li>{t("history.mostMissed")}</li>
-        <li>{t("history.nothing")}</li>
-        <li>{t("history.today")}</li>
+      <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px] text-ink-2 sm:grid-cols-3">
+        {LEGEND.map(([key, swatch]) => (
+          <li key={key} className="flex items-center gap-2">
+            <span aria-hidden className={`h-4 w-4 shrink-0 rounded-md ${swatch}`} />
+            <span>{t(key)}</span>
+          </li>
+        ))}
       </ul>
       <button type="button" className="btn btn-primary mt-6" onClick={() => setExportOpen(true)}>{t("history.export")}</button>
       </div>

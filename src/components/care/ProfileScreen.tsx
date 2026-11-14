@@ -24,7 +24,7 @@ export function ProfileScreen({
 }) {
   const t = useTranslations("care");
   const locale = useLocale() as Locale;
-  const { profile, session, setName, setFullScreen } = useCare();
+  const { profile, session, setName } = useCare();
   const [edit, setEdit] = useState(false);
   const [draft, setDraft] = useState(profile.name);
   const [language, setLanguage] = useState(false);
@@ -105,16 +105,6 @@ export function ProfileScreen({
           <Toggle on={high} label={t("profile.contrast")} onChange={(next) => { setHigh(next); applyContrast(next); }} />
         </div>
       </section>
-
-      <p className="label-micro mt-6">{t("profile.notifications")}</p>
-      <section className="card mt-2 flex items-center justify-between gap-3 p-4">
-        <div>
-          <p className="font-medium">{t("profile.fullScreen")}</p>
-          <p className="text-small text-ink-2">{t("profile.fullScreenBody")}</p>
-        </div>
-        <Toggle on={profile.fullScreenReminders} label={t("profile.fullScreen")} onChange={setFullScreen} />
-      </section>
-      <Link href="/reminder" className="mt-2 inline-flex min-h-11 items-center font-medium text-accent-ink">{t("profile.preview")}</Link>
 
       <p className="label-micro mt-6">{t("profile.account")}</p>
       {profile.signedIn ? (
