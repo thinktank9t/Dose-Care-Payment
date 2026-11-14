@@ -368,15 +368,20 @@ export function ClaimPremiumForm({
               </p>
             ) : null}
 
-            <button
-              type="submit"
-              className="btn btn-primary w-full sm:w-auto"
-              disabled={submitting || disabled}
-              data-testid="claim-submit"
-            >
-              {submitting ? <Spinner /> : null}
-              {submitting ? t("submitting") : t("submit")}
-            </button>
+            {/* Same rule as the medicine form: on a phone the button sticks
+                directly above the tab bar while this step is on screen, on a
+                solid band the size of the card's padding, never under the bar. */}
+            <div className="sticky bottom-[var(--tabbar-h,0px)] z-10 -mx-6 bg-surface px-6 py-3 md:static md:mx-0 md:bg-transparent md:p-0">
+              <button
+                type="submit"
+                className="btn btn-primary w-full sm:w-auto"
+                disabled={submitting || disabled}
+                data-testid="claim-submit"
+              >
+                {submitting ? <Spinner /> : null}
+                {submitting ? t("submitting") : t("submit")}
+              </button>
+            </div>
           </form>
         )}
       </section>

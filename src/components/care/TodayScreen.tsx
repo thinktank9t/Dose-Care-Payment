@@ -18,9 +18,13 @@ import {
 import { DATE_LOCALE, formatNumber } from "@/lib/format";
 import type { ScheduledDose } from "@/lib/care/types";
 import { DoseFlag, EmptyState, Icon, MedGlyph, Sheet } from "./chrome";
+import { useShell } from "./AppShell";
 import { useCare } from "./store";
 
 const UNDO_MS = 5000;
+
+/** Readable section title: --ink-2, 13px, 600. Not the --ink-3 micro label. */
+const SECTION_TITLE = "font-body text-[13px] font-semibold leading-snug tracking-normal text-ink-2";
 
 export function TodayScreen() {
   const t = useTranslations("care");
@@ -73,6 +77,13 @@ export function TodayScreen() {
     setPending(null);
   }
 
+  // The floating Add button hides while the toast is up, so they never share a band.
+  const { setToastOpen } = useShell();
+  useEffect(() => {
+    setToastOpen(pending !== null);
+  }, [pending, setToastOpen]);
+  useEffect(() => () => setToastOpen(false), [setToastOpen]);
+
   const doses = pending
     ? saved.map((dose) =>
         dose.medicine.id === pending.medicine.id && dose.time === pending.time ? { ...dose, status: "taken" as const } : dose,
@@ -104,21 +115,19 @@ export function TodayScreen() {
       router.push(`/reminder?med=${dose.medicine.id}&time=${dose.time}`);
       return;
     }
-    if (dose.status === "taken" || dose.status === "skipped" || isPast(today, dose.time, now)) {
-      setSheet(dose);
-      return;
-    }
-    markTakenWithUndo(dose);
+    // The card opens the detail sheet. Marking taken has its own control on
+    // the row (with undo), so a stray tap on the card never records a dose.
+    setSheet(dose);
   }
 
   return (
     <div className="container-page py-8 lg:py-10">
       <p className="text-small text-ink-2">{dateLabel}</p>
-      <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="min-w-0">
+      <div className="mt-1 flex items-start justify-between gap-3">
+        <h1 className="min-w-0 flex-1">
           {t(`today.${greetingKey(now)}`)}, {profile.name.trim() || t("today.friend")}.
         </h1>
-        <Link href="/profile" className="mb-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[20px] text-accent-ink" aria-label={t("tabs.profile")}>
+        <Link href="/profile" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[20px] text-accent-ink" aria-label={t("tabs.profile")}>
           {initial}
         </Link>
       </div>
@@ -133,7 +142,7 @@ export function TodayScreen() {
       ) : (
         <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           <div>
-          <section className="card p-5">
+          <section className="card px-4 py-5">
             <div className="flex items-center gap-3">
               <Progress value={percent} />
               <div className="min-w-0">
@@ -151,7 +160,7 @@ export function TodayScreen() {
 
           <div className="mt-3 space-y-2">
             {overdue.map((dose) => (
-              <button key={`${dose.medicine.id}-${dose.time}-due`} type="button" onClick={() => openDose(dose)} className="flex w-full items-center gap-3 rounded-[18px] bg-warn-soft px-3 py-3 text-left">
+              <button key={`${dose.medicine.id}-${dose.time}-due`} type="button" onClick={() => openDose(dose)} className="flex w-full items-center gap-3 rounded-[18px] bg-warn-soft px-4 py-3 text-left">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-warn"><Icon name="bell" size={18} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium text-warn">{t("today.overdue", { name: dose.medicine.name, time: formatClock(dose.time, locale) })}</span>
@@ -161,7 +170,7 @@ export function TodayScreen() {
               </button>
             ))}
             {low.map((med) => (
-              <button key={med.id} type="button" onClick={() => { setRefillId(med.id); setAdd(Math.max(1, med.packSize || 10)); }} className="flex w-full items-center gap-3 rounded-[18px] bg-danger-soft px-3 py-3 text-left">
+              <button key={med.id} type="button" onClick={() => { setRefillId(med.id); setAdd(Math.max(1, med.packSize || 10)); }} className="flex w-full items-center gap-3 rounded-[18px] bg-danger-soft px-4 py-3 text-left">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-danger"><Icon name="battery" size={18} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium text-danger">{t("today.low", { name: med.name })}</span>
@@ -176,20 +185,20 @@ export function TodayScreen() {
           <div className="grid items-start gap-6 xl:grid-cols-2">
           {upcoming.length > 0 && (
             <section>
-              <h2 className="label-micro">{t("today.upNext", { count: formatNumber(upcoming.length, locale) })}</h2>
+              <h2 className={SECTION_TITLE}>{t("today.upNext", { count: formatNumber(upcoming.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {upcoming.map((dose) => (
-                  <DoseRow key={`${dose.medicine.id}-${dose.time}`} dose={dose} locale={locale} onOpen={() => openDose(dose)} />
+                  <DoseRow key={`${dose.medicine.id}-${dose.time}`} dose={dose} locale={locale} onOpen={() => openDose(dose)} onTaken={() => markTakenWithUndo(dose)} />
                 ))}
               </ul>
             </section>
           )}
           {earlier.length > 0 && (
             <section>
-              <h2 className="label-micro">{t("today.earlier", { count: formatNumber(earlier.length, locale) })}</h2>
+              <h2 className={SECTION_TITLE}>{t("today.earlier", { count: formatNumber(earlier.length, locale) })}</h2>
               <ul className="mt-2 space-y-2">
                 {earlier.map((dose) => (
-                  <DoseRow key={`${dose.medicine.id}-${dose.time}-e`} dose={dose} locale={locale} onOpen={() => openDose(dose)} />
+                  <DoseRow key={`${dose.medicine.id}-${dose.time}-e`} dose={dose} locale={locale} onOpen={() => openDose(dose)} onTaken={() => markTakenWithUndo(dose)} />
                 ))}
               </ul>
             </section>
@@ -202,7 +211,7 @@ export function TodayScreen() {
         <div
           role="status"
           data-testid="dose-undo"
-          className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 mx-auto md:bottom-4 flex w-[calc(100%-2*var(--gutter))] max-w-md items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-bg"
+          className="fixed inset-x-0 bottom-[calc(var(--tabbar-h,0px)+1rem)] z-30 mx-auto flex w-[calc(100%-2*var(--gutter))] max-w-md items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-bg"
         >
           <Icon name="check" size={18} />
           <span className="min-w-0 flex-1 font-medium">{t("today.markedTaken", { name: pending.medicine.name })}</span>
@@ -273,28 +282,48 @@ function DoseRow({
   dose,
   locale,
   onOpen,
+  onTaken,
 }: {
   dose: ScheduledDose;
   locale: string;
   onOpen: () => void;
+  onTaken: () => void;
 }) {
   const t = useTranslations("care");
   const done = dose.status === "taken";
+  const skipped = dose.status === "skipped";
   const detail = dose.medicine.condition || (dose.medicine.food === "either" ? "" : t(`food.${dose.medicine.food}`));
+  // Two controls side by side (a button cannot hold a button): the card body
+  // opens the detail sheet; "Taken" is its own 44px target.
   return (
-    <li>
-      <button type="button" onClick={onOpen} className="card flex w-full items-center gap-3 p-3 text-left">
+    <li className="card flex items-center gap-2 pr-3">
+      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 rounded-[18px] py-3 pl-3 text-left">
         <MedGlyph form={dose.medicine.form} color={dose.medicine.color} />
         <span className="min-w-0 flex-1">
           <span className="block font-medium text-ink">{dose.medicine.name}</span>
           {detail ? <span className="block text-small text-ink-2">{detail}</span> : null}
+          <span className="block text-small text-ink-2">{formatClock(dose.time, locale)}</span>
           <DoseFlag dose={dose} className="mt-1" />
         </span>
-        <span className="text-small text-ink-2">{formatClock(dose.time, locale)}</span>
-        <span className={`ml-1 flex h-6 w-6 items-center justify-center rounded-full border ${done ? "border-accent bg-accent text-on-accent" : "border-line"}`}>
-          {done ? <Icon name="check" size={14} /> : null}
-        </span>
       </button>
+      {done ? (
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center" role="img" aria-label={t("today.doneLabel")}>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-on-accent">
+            <Icon name="check" size={16} strokeWidth={2.2} />
+          </span>
+        </span>
+      ) : skipped ? null : (
+        <button
+          type="button"
+          onClick={onTaken}
+          className="btn btn-secondary min-h-11 shrink-0 gap-1.5 px-3 text-[14px]"
+          aria-label={t("today.markTakenLabel", { name: dose.medicine.name })}
+          data-testid="dose-taken"
+        >
+          <Icon name="check" size={16} strokeWidth={2} />
+          {t("today.markTaken")}
+        </button>
+      )}
     </li>
   );
 }

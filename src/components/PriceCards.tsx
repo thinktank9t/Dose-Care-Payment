@@ -89,7 +89,10 @@ export async function PriceCards() {
         return (
           <article
             key={plan.period}
-            className={`card flex flex-col gap-5 p-6 ${highlight ? "border-accent/40 ring-1 ring-accent/20" : ""}`}
+            className="card flex flex-col gap-5 p-6"
+            // The suggested plan gets one 2px accent line in place of the
+            // hairline, never a border plus a ring.
+            style={highlight ? { border: "2px solid var(--accent)" } : undefined}
             data-testid={`price-${plan.period}`}
           >
             <div className="flex items-center justify-between gap-3">

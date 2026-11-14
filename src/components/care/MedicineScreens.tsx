@@ -16,7 +16,7 @@ import {
 } from "@/lib/care/schedule";
 import { formatNumber, localizeDigits } from "@/lib/format";
 import type { AlertSound, Food, MedColor, MedForm, Medicine, Repeat } from "@/lib/care/types";
-import { EmptyState, Icon, MedGlyph, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
+import { BackButton, EmptyState, Icon, MedGlyph, STICKY_ACTION, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
 const FORMS: MedForm[] = ["tablet", "capsule", "liquid", "injection"];
@@ -37,14 +37,16 @@ export function MedicinesScreen() {
           <h1>{t("meds.title")}</h1>
           <p className="mt-2 text-ink-2">{localizeDigits(t("meds.count", { count: profile.medicines.length }), locale)}</p>
         </div>
+        {/* A filter with a visible word, not a bare icon. */}
         <button
           type="button"
           aria-pressed={lowOnly}
-          aria-label={t("meds.low")}
           onClick={() => setLowOnly((value) => !value)}
-          className={`flex h-12 w-12 items-center justify-center rounded-full ${lowOnly ? "bg-warn-soft text-warn" : "bg-accent-soft text-accent-ink"}`}
+          className={`inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-[14px] font-medium ${lowOnly ? "bg-danger-soft text-danger" : "bg-accent-soft text-accent-ink"}`}
+          data-testid="filter-low"
         >
           <Icon name="battery" size={20} />
+          {t("meds.low")}
         </button>
       </div>
       {profile.medicines.length === 0 ? (
@@ -126,10 +128,8 @@ export function MedicineDetail({ id, personId }: { id: string; personId?: string
   return (
     <div className="container-page py-8 lg:py-10">
       <div className="flex items-center justify-between">
-        <button type="button" onClick={() => router.push(personId ? `/care/${personId}` : "/medicines")} className="flex h-11 w-11 items-center justify-center rounded-full bg-surface" aria-label={t("common.back")}>
-          <Icon name="back" />
-        </button>
-        {canEdit ? <Link href={`${base}/edit/${med.id}`} className="min-h-11 px-2 font-medium text-accent-ink">{t("meds.edit")}</Link> : <span />}
+        <BackButton onClick={() => router.push(personId ? `/care/${personId}` : "/medicines")} label={t("common.back")} />
+        {canEdit ? <Link href={`${base}/edit/${med.id}`} className="-mr-2 inline-flex min-h-11 items-center px-2 font-medium text-accent-ink">{t("meds.edit")}</Link> : <span />}
       </div>
       <div className="mt-4 flex items-center gap-3">
         <MedGlyph form={med.form} color={med.color} size={56} />
@@ -245,7 +245,7 @@ function TimesSheet({ med, personId, onClose }: { med: Medicine; personId?: stri
           <li key={time} className="flex items-center justify-between rounded-xl border border-line px-3 py-2">
             <span>{formatClock(time, locale)}</span>
             {times.length > 1 ? (
-              <button type="button" aria-label={t("form.removeTime")} onClick={() => setTimes(times.filter((item) => item !== time))}><Icon name="close" size={16} /></button>
+              <button type="button" className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-bg-alt" aria-label={t("form.removeTime")} onClick={() => setTimes(times.filter((item) => item !== time))}><Icon name="close" size={18} /></button>
             ) : null}
           </li>
         ))}
@@ -294,16 +294,19 @@ export function MedicineForm({
         title={step === 1 ? (existing ? t("form.editTitle") : t("form.addTitle")) : step === 2 ? t("form.when") : t("form.supplyTitle")}
         onBack={() => (step === 1 ? router.push(backTo) : setStep((value) => value - 1))}
       />
-      <div className="mt-2 grid grid-cols-3 gap-1.5 px-2">
-        {[1, 2, 3].map((n) => <span key={n} className={`h-1 rounded-full ${n <= step ? "bg-accent" : "bg-line"}`} />)}
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
+        {[1, 2, 3].map((n) => <span key={n} className={`h-1.5 rounded-full ${n <= step ? "bg-accent" : "bg-bg-alt"}`} />)}
       </div>
 
       {step === 1 && (
         <div className="mt-5 space-y-4">
-          <label className="block text-small text-ink-2" htmlFor="med-name">{t("form.name")}</label>
-          <input id="med-name" className="field -mt-2 w-full" placeholder={t("form.namePh")} value={med.name} onChange={(event) => patch({ name: event.target.value })} />
+          <div>
+            <label className="block text-small text-ink-2" htmlFor="med-name">{t("form.name")}</label>
+            <input id="med-name" className="field mt-2 w-full" placeholder={t("form.namePh")} value={med.name} onChange={(event) => patch({ name: event.target.value })} />
+          </div>
+          <div>
           <p className="text-small text-ink-2">{t("form.form")}</p>
-          <div className="grid grid-cols-4 gap-2 rounded-[18px] bg-bg-alt p-2">
+          <div className="mt-2 grid grid-cols-4 gap-2 rounded-[18px] bg-bg-alt p-2">
             {FORMS.map((form) => (
               <button key={form} type="button" aria-pressed={med.form === form} onClick={() => patch({ form })} className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[12px] ${med.form === form ? "bg-accent-soft text-accent-ink" : "text-ink-2"}`}>
                 <Icon name={form === "tablet" ? "pill" : form === "capsule" ? "capsule" : form === "liquid" ? "drop" : "syringe"} size={18} />
@@ -311,29 +314,37 @@ export function MedicineForm({
               </button>
             ))}
           </div>
-          <div className="card flex items-center justify-between p-4">
+          </div>
+          {/* Stacks under the label on a phone so "1 tablet" is never crushed. */}
+          <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium">{t("form.amount")}</p>
               <p className="text-small text-ink-2">{t("form.amountHint")}</p>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full border border-line" onClick={() => patch({ amount: Math.max(1, med.amount - 1) })} aria-label="-">−</button>
-              <span className="min-w-16 text-center">{med.amount} {t(`unit.${unitKey(med.form)}`)}</span>
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full border border-line" onClick={() => patch({ amount: med.amount + 1 })} aria-label="+">+</button>
+              <button type="button" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line text-[20px]" onClick={() => patch({ amount: Math.max(1, med.amount - 1) })} aria-label="-">−</button>
+              <span className="min-w-20 flex-1 text-center sm:flex-none">{med.amount} {t(`unit.${unitKey(med.form)}`)}</span>
+              <button type="button" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line text-[20px]" onClick={() => patch({ amount: med.amount + 1 })} aria-label="+">+</button>
             </div>
           </div>
-          <p className="text-small text-ink-2">{t("form.color")}</p>
-          <div className="flex gap-3">
-            {COLORS.map((color) => (
-              <button key={color} type="button" aria-label={color} aria-pressed={med.color === color} onClick={() => patch({ color })} className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: MED_COLORS[color].bg, color: MED_COLORS[color].fg, outline: med.color === color ? "2px solid var(--accent)" : undefined, outlineOffset: 2 }}>
-                {med.color === color ? <Icon name="check" size={16} /> : null}
-              </button>
-            ))}
+          <div>
+            <p className="text-small text-ink-2">{t("form.color")}</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {COLORS.map((color) => (
+                <button key={color} type="button" aria-label={color} aria-pressed={med.color === color} onClick={() => patch({ color })} className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: MED_COLORS[color].bg, color: MED_COLORS[color].fg, outline: med.color === color ? "2px solid var(--accent)" : undefined, outlineOffset: 2 }}>
+                  {med.color === color ? <Icon name="check" size={18} /> : null}
+                </button>
+              ))}
+            </div>
           </div>
-          <label className="block text-small text-ink-2" htmlFor="condition">{t("form.condition")}</label>
-          <input id="condition" className="field -mt-2 w-full" placeholder={t("form.conditionPh")} value={med.condition} onChange={(event) => patch({ condition: event.target.value })} />
-          <label className="block text-small text-ink-2" htmlFor="notes">{t("form.notes")}</label>
-          <textarea id="notes" className="field -mt-2 min-h-24 w-full py-3" placeholder={t("form.notesPh")} value={med.sideEffects} onChange={(event) => patch({ sideEffects: event.target.value })} />
+          <div>
+            <label className="block text-small text-ink-2" htmlFor="condition">{t("form.condition")}</label>
+            <input id="condition" className="field mt-2 w-full" placeholder={t("form.conditionPh")} value={med.condition} onChange={(event) => patch({ condition: event.target.value })} />
+          </div>
+          <div>
+            <label className="block text-small text-ink-2" htmlFor="notes">{t("form.notes")}</label>
+            <textarea id="notes" className="field mt-2 min-h-24 w-full py-3" placeholder={t("form.notesPh")} value={med.sideEffects} onChange={(event) => patch({ sideEffects: event.target.value })} />
+          </div>
         </div>
       )}
 
@@ -373,7 +384,7 @@ export function MedicineForm({
             <label key={time} className="card flex items-center gap-2 px-3">
               <Icon name="clock" size={18} />
               <input className="min-h-12 flex-1 bg-transparent" type="time" value={time} onChange={(event) => patch({ times: med.times.map((item) => item === time ? event.target.value : item) })} />
-              {med.times.length > 1 ? <button type="button" aria-label={t("form.removeTime")} onClick={() => patch({ times: med.times.filter((item) => item !== time) })}><Icon name="close" size={16} /></button> : null}
+              {med.times.length > 1 ? <button type="button" className="-mr-1.5 flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-bg-alt" aria-label={t("form.removeTime")} onClick={() => patch({ times: med.times.filter((item) => item !== time) })}><Icon name="close" size={18} /></button> : null}
             </label>
           ))}
           <button type="button" className="min-h-12 w-full rounded-[18px] border border-dashed border-line text-ink-2" onClick={() => patch({ times: [...med.times, "20:00"] })}>{t("form.addTime")}</button>
@@ -425,18 +436,27 @@ export function MedicineForm({
           </div>
           {med.trackSupply ? (
             <div className="mt-4 space-y-3">
-              <label className="block text-small text-ink-2" htmlFor="stock">{t("form.stock")}</label>
-              <input id="stock" className="field -mt-2 w-full" inputMode="numeric" value={med.stock} onChange={(event) => patch({ stock: Number(event.target.value) || 0 })} />
-              <label className="block text-small text-ink-2" htmlFor="pack">{t("form.pack")}</label>
-              <input id="pack" className="field -mt-2 w-full" inputMode="numeric" value={med.packSize} onChange={(event) => patch({ packSize: Number(event.target.value) || 0 })} />
-              <label className="block text-small text-ink-2" htmlFor="at">{t("form.remindAt")}</label>
-              <input id="at" className="field -mt-2 w-full" inputMode="numeric" value={med.refillAt} onChange={(event) => patch({ refillAt: Number(event.target.value) || 0 })} />
+              <div>
+                <label className="block text-small text-ink-2" htmlFor="stock">{t("form.stock")}</label>
+                <input id="stock" className="field mt-2 w-full" inputMode="numeric" value={med.stock} onChange={(event) => patch({ stock: Number(event.target.value) || 0 })} />
+              </div>
+              <div>
+                <label className="block text-small text-ink-2" htmlFor="pack">{t("form.pack")}</label>
+                <input id="pack" className="field mt-2 w-full" inputMode="numeric" value={med.packSize} onChange={(event) => patch({ packSize: Number(event.target.value) || 0 })} />
+              </div>
+              <div>
+                <label className="block text-small text-ink-2" htmlFor="at">{t("form.remindAt")}</label>
+                <input id="at" className="field mt-2 w-full" inputMode="numeric" value={med.refillAt} onChange={(event) => patch({ refillAt: Number(event.target.value) || 0 })} />
+              </div>
             </div>
           ) : null}
         </div>
       )}
 
-      <div className="mt-8">
+      {/* Sticks to the bottom, directly above the tab bar, so the main action
+          is always reachable and never sits under the bar. The solid band
+          lets the fields scroll behind it. */}
+      <div className={STICKY_ACTION}>
         {step < 3 ? (
           <button type="button" className="btn btn-primary w-full" disabled={step === 1 && !med.name.trim()} onClick={() => setStep((value) => value + 1)}>
             {step === 1 ? t("form.continueSchedule") : t("form.continueSupply")}

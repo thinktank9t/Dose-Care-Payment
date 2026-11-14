@@ -6,11 +6,28 @@
 export type BkashAccountType = "personal" | "merchant";
 export type BkashMethod = "send_money" | "payment";
 
+function stripSlash(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+function isLoopback(hostOrUrl: string): boolean {
+  return /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:|\/|$)/i.test(hostOrUrl);
+}
+
+/**
+ * Canonical public site URL from env / Vercel. For Google OAuth redirects use
+ * the request Host in the server action — never rely on a localhost default.
+ */
 export function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured && !(process.env.VERCEL && isLoopback(configured))) {
+    return stripSlash(configured);
+  }
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProd) return stripSlash(`https://${vercelProd}`);
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) return stripSlash(`https://${vercelUrl}`);
+  return stripSlash(configured || "http://localhost:3000");
 }
 
 export function supportEmail(): string {

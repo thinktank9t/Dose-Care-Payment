@@ -183,7 +183,8 @@
     "faq3Q": "What happens when Premium ends?",
     "faq3A": "Nothing is deleted. Caregivers and patients beyond the free limit are paused until you renew.",
     "alreadyPaid": "Already a member?",
-    "checkStatusCta": "Check your Premium status"
+    "checkStatusCta": "Check your Premium status",
+    "faqTitle": "Common questions"
   },
   "signIn": {
     "title": "Sign in",
@@ -318,7 +319,7 @@
     "scan": "Scan to download",
     "qrAlt": "QR code for the Dose Care listing on Google Play",
     "comingSoon": "Coming soon",
-    "comingSoonNote": "The Android app is on its way to Google Play. This code and button go live the moment it is published."
+    "comingSoonNote": "The Android app is on its way to Google Play. This button goes live the moment it is published."
   },
   "footer": {
     "tagline": "Medication reminders for families, kept on schedule.",
@@ -430,7 +431,10 @@
       "markedTaken": "Marked {name} as taken",
       "undo": "Undo",
       "late": "Late",
-      "skipped": "Skipped"
+      "skipped": "Skipped",
+      "markTaken": "Taken",
+      "markTakenLabel": "Mark {name} as taken",
+      "doneLabel": "Taken"
     },
     "unit": {
       "tablet": "tablet",
