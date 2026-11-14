@@ -24,6 +24,12 @@
   --pending-soft: #f7e9d4;
   --shimmer-band: rgba(255, 255, 255, 0.35);
   --gutter: 22px;
+  /* Medicine icon tints (lib/care/schedule.ts MED_COLORS), light and dark. */
+  --med-sand-bg: #f4e6d4; --med-sand-fg: #8a5a2a;
+  --med-sky-bg: #d7e7ef; --med-sky-fg: #0b5575;
+  --med-blush-bg: #f6dde6; --med-blush-fg: #8c3e55;
+  --med-stone-bg: #e8e2d8; --med-stone-fg: #5e564c;
+  --med-mint-bg: #d9efe6; --med-mint-fg: #1e6b4a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +53,11 @@
     --pending: #e5b770;
     --pending-soft: #3a2e1a;
     --shimmer-band: rgba(255, 255, 255, 0.08);
+    --med-sand-bg: #3a2e1a; --med-sand-fg: #e5b770;
+    --med-sky-bg: #123a4d; --med-sky-fg: #8fd3ec;
+    --med-blush-bg: #3d1f2b; --med-blush-fg: #f0a3bc;
+    --med-stone-bg: #2e2a25; --med-stone-fg: #d2c8b8;
+    --med-mint-bg: #163a2d; --med-mint-fg: #8ed9b6;
   }
 }
 
@@ -75,6 +86,11 @@
   --pending: #e5b770;
   --pending-soft: #3a2e1a;
   --shimmer-band: rgba(255, 255, 255, 0.08);
+  --med-sand-bg: #3a2e1a; --med-sand-fg: #e5b770;
+  --med-sky-bg: #123a4d; --med-sky-fg: #8fd3ec;
+  --med-blush-bg: #3d1f2b; --med-blush-fg: #f0a3bc;
+  --med-stone-bg: #2e2a25; --med-stone-fg: #d2c8b8;
+  --med-mint-bg: #163a2d; --med-mint-fg: #8ed9b6;
 }
 
 /* High contrast composes with either theme. It only darkens ink and thickens the hairline. */
@@ -144,6 +160,23 @@ html {
     animation-duration: 180ms;
     animation-timing-function: ease-out;
   }
+}
+
+/* Theme switch (lib/appearance.ts switchTheme): the new theme is revealed by a
+   growing circle clip on the new snapshot, so turn off the default cross-fade
+   and keep the old snapshot fully visible underneath. */
+html.theme-switching::view-transition-old(root),
+html.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-switching::view-transition-old(root) { z-index: 1; }
+html.theme-switching::view-transition-new(root) { z-index: 2; }
+
+/* Fallback where View Transitions are missing: a short colour cross-fade. */
+html.theme-fade,
+html.theme-fade * {
+  transition: background-color 280ms ease, color 280ms ease, border-color 280ms ease, fill 280ms ease, stroke 280ms ease !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -345,6 +378,10 @@ button:focus-visible {
   font-weight: 500;
 }
 
+/* Empty segment of a progress track or step dots. --bg-alt vanishes on the
+   dark page and --line vanishes on white; a light ink tint reads on both. */
+.track-off { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+
 .prose-legal p { margin-block: 0.9em; color: var(--ink-2); }
 .prose-legal h2 { margin-top: 1.8em; margin-bottom: 0.5em; }
 
@@ -378,6 +415,90 @@ button:focus-visible {
   to { transform: translateX(100%); }
 }
 
+/*
+ * Page backdrop (src/components/Backdrop.tsx): a wash at the top of every
+ * page, public and signed in, so the screen doesn't read as a flat grey sheet.
+ * Three soft accent glows drifting slowly, plus a faint dot grid, fading out
+ * downward. Built only from tokens, so it follows light, dark
+ * and the accent automatically. A deliberate, owner-approved exception to the
+ * "no gradient fills" rule: it sits behind content, never behind text a card
+ * carries. High contrast drops it.
+ */
+.app-backdrop {
+  position: absolute;
+  inset: 0 0 auto 0;
+  /* Never taller than the page area, so it can't bleed into the footer on a short page. */
+  height: min(720px, 100%);
+  z-index: -1;
+  overflow: hidden; /* the drifting glows never cause sideways scroll */
+  pointer-events: none;
+  /* Dot grid on the layer itself; the glows are children so they can move. */
+  background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--accent) 20%, transparent) 1.1px, transparent 1.7px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+}
+:root[data-contrast="high"] .app-backdrop { display: none; }
+
+/* Soft round glows, all in the light --accent-soft tint (no deep accent
+   core). Only transform animates (compositor-only), on slow,
+   offset cycles so the motion never visibly repeats or draws the eye. */
+.backdrop-glow {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.backdrop-glow-a {
+  width: 760px;
+  height: 760px;
+  top: -320px;
+  right: -180px;
+  background: radial-gradient(circle, var(--accent-soft) 0%, color-mix(in srgb, var(--accent-soft) 60%, transparent) 40%, transparent 68%);
+  animation-name: dc-drift-a;
+  animation-duration: 26s;
+}
+.backdrop-glow-b {
+  width: 620px;
+  height: 620px;
+  top: -200px;
+  left: -220px;
+  background: radial-gradient(circle, var(--accent-soft) 0%, color-mix(in srgb, var(--accent-soft) 55%, transparent) 40%, transparent 68%);
+  animation-name: dc-drift-b;
+  animation-duration: 32s;
+}
+.backdrop-glow-c {
+  width: 460px;
+  height: 460px;
+  top: 60px;
+  left: 42%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-soft) 70%, transparent) 0%, transparent 66%);
+  animation-name: dc-drift-c;
+  animation-duration: 22s;
+}
+@keyframes dc-drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-90px, 50px, 0) scale(1.12); }
+}
+@keyframes dc-drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.05); }
+  to { transform: translate3d(110px, 40px, 0) scale(0.95); }
+}
+@keyframes dc-drift-c {
+  from { transform: translate3d(-60px, 0, 0) scale(0.92); }
+  to { transform: translate3d(80px, -30px, 0) scale(1.1); }
+}
+.backdrop-art {
+  opacity: 0.22;
+  animation: dc-float 9s ease-in-out infinite alternate;
+}
+@keyframes dc-float {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(-12px) rotate(-2deg); }
+}
+
 :root[data-contrast="high"] .label-micro { font-weight: 600; }
 :root[data-contrast="high"] .text-small { font-weight: 500; }
 
@@ -386,6 +507,9 @@ button:focus-visible {
   .animate-spin { animation-duration: 2s; }
   .shimmer::after { animation: none; }
   .skeleton { opacity: 0.8; }
+  /* The backdrop stays, but holds still. */
+  .backdrop-glow,
+  .backdrop-art { animation: none; }
 }
 
 html[lang="bn"] .label-micro { font-size: 0.75rem; letter-spacing: 0.6px; }

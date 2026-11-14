@@ -96,6 +96,8 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
               >
                 <span className="flex items-center gap-3">
                   <input
+                    // Server-rendered like the text fields below; see the note there.
+                    suppressHydrationWarning
                     type="radio"
                     name="planPicker"
                     value={p}
@@ -157,6 +159,10 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
               {t("trxIdLabel")}
             </label>
             <input
+              // Autofill / password-manager extensions add attributes (e.g.
+              // data-has-listeners) before React hydrates. Ignore attribute
+              // differences on this one field only.
+              suppressHydrationWarning
               id="trxId"
               name="trxId"
               required
@@ -182,6 +188,10 @@ export function PaymentFlow({ initialPlan, prices, bkash, reference }: Props) {
               {t("senderLabel")}
             </label>
             <input
+              // Autofill / password-manager extensions add attributes (e.g.
+              // data-has-listeners) before React hydrates. Ignore attribute
+              // differences on this one field only.
+              suppressHydrationWarning
               id="senderNumber"
               name="senderNumber"
               inputMode="tel"

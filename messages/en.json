@@ -25,7 +25,9 @@
     "themeSystem": "Match system",
     "contrastHigh": "High contrast",
     "contrastStandard": "Standard contrast",
-    "openApp": "Open app"
+    "openApp": "Open app",
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
   },
   "common": {
     "loading": "Loading…",
@@ -666,6 +668,14 @@
       "noneTitle": "No dose is due",
       "noneBody": "When a dose is due and full-screen reminders are on, it opens here.",
       "close": "Close"
+    },
+    "starter": {
+      "remindTitle": "On-time reminders",
+      "remindBody": "Each dose at the right time, with a gentle alert.",
+      "refillTitle": "Refill alerts",
+      "refillBody": "Know before a medicine runs out.",
+      "familyTitle": "Family can help",
+      "familyBody": "Invite a caregiver to see and mark doses."
     }
   }
 }

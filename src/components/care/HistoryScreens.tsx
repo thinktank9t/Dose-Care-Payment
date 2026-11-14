@@ -92,7 +92,7 @@ export function HistoryScreen() {
               className={`flex aspect-square flex-col items-center justify-center rounded-2xl text-[13px] ${
                 !cell.inMonth ? "invisible" :
                 mark === "all" ? "bg-accent-soft text-accent-ink" :
-                mark === "some" ? "bg-[#F4E6D4] text-ink" :
+                mark === "some" ? "bg-pending-soft text-pending" :
                 mark === "most" ? "bg-warn-soft text-warn" :
                 mark === "today" ? "border border-ink bg-surface" :
                 "bg-bg-alt text-ink-2"

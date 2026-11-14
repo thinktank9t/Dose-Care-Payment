@@ -320,7 +320,7 @@ export function BackButton({ onClick, label }: { onClick: () => void; label: str
     <button
       type="button"
       onClick={onClick}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-bg-alt text-ink"
       aria-label={label}
     >
       <Icon name="back" size={22} />
@@ -349,7 +349,7 @@ export function ScreenHeader({
       {!onBack && backHref ? (
         <Link
           href={backHref}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-bg-alt text-ink"
           aria-label={t("common.back")}
           data-testid="screen-back"
         >
@@ -365,23 +365,79 @@ export function ScreenHeader({
   );
 }
 
+export type IconName = Parameters<typeof Icon>[0]["name"];
+
+/** What a new person gets once they add a medicine (Today and Medicines empty states). */
+export function starterTips(t: ReturnType<typeof useTranslations<"care">>) {
+  return [
+    { icon: "bell" as const, title: t("starter.remindTitle"), body: t("starter.remindBody") },
+    { icon: "battery" as const, title: t("starter.refillTitle"), body: t("starter.refillBody") },
+    { icon: "users" as const, title: t("starter.familyTitle"), body: t("starter.familyBody") },
+  ];
+}
+
+/**
+ * The flat two-tone empty-state art from the design guide: a soft --bg-alt
+ * ellipse beneath, a dashed accent ring, an --accent-soft disc with the glyph,
+ * and two small accent details. No gradients, no characters.
+ */
+function EmptyArt({ icon }: { icon: React.ReactNode }) {
+  return (
+    <div className="relative mx-auto h-40 w-44" aria-hidden>
+      <svg className="absolute inset-0 h-full w-full text-accent" viewBox="0 0 176 160" fill="none">
+        <ellipse cx="88" cy="146" rx="54" ry="8" fill="var(--bg-alt)" />
+        <circle cx="88" cy="72" r="62" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.6" strokeDasharray="4 7" />
+        <g transform="rotate(-35 150 30)" stroke="currentColor" strokeWidth="1.6" strokeOpacity="0.6">
+          <rect x="136" y="23" width="28" height="13" rx="6.5" fill="var(--surface)" />
+          <path d="M150 23v13" />
+        </g>
+        <path d="M24 26l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="currentColor" fillOpacity="0.45" />
+      </svg>
+      <div className="absolute left-1/2 top-[72px] flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent-soft text-accent">
+        {icon}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Empty is not an error: a calm card with the art, one line of explanation,
+ * the one action, and (optionally) what the person gets once they start.
+ */
 export function EmptyState({
   icon,
   title,
   body,
   action,
+  tips,
 }: {
   icon: React.ReactNode;
   title: string;
   body: string;
   action?: React.ReactNode;
+  tips?: { icon: IconName; title: string; body: string }[];
 }) {
   return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-accent-soft text-accent">{icon}</div>
-      <h2 className="text-[22px]">{title}</h2>
-      <p className="mt-2 max-w-[32ch] text-ink-2">{body}</p>
-      {action ? <div className="mt-5">{action}</div> : null}
-    </div>
+    <section className="card mt-8 px-6 py-10 text-center sm:px-10" data-testid="empty-state">
+      <EmptyArt icon={icon} />
+      <h2 className="mt-4 text-[22px]">{title}</h2>
+      <p className="mx-auto mt-2 max-w-[40ch] text-ink-2">{body}</p>
+      {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
+      {tips && tips.length ? (
+        <ul className="mt-8 grid gap-5 border-t border-line pt-6 text-left sm:grid-cols-3 sm:gap-6">
+          {tips.map((tip) => (
+            <li key={tip.title} className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
+                <Icon name={tip.icon} size={18} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-medium text-ink">{tip.title}</span>
+                <span className="mt-0.5 block text-small text-ink-2">{tip.body}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }

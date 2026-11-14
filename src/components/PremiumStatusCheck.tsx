@@ -75,6 +75,10 @@ export function PremiumStatusCheck({ supportEmail }: { supportEmail: string }) {
               {t("emailLabel")}
             </label>
             <input
+              // Autofill / password-manager extensions add attributes (e.g.
+              // data-has-listeners) before React hydrates. Ignore attribute
+              // differences on this one field only.
+              suppressHydrationWarning
               id={`${fieldId}-email`}
               name="email"
               type="email"

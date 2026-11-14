@@ -16,7 +16,7 @@ import {
 } from "@/lib/care/schedule";
 import { formatNumber, localizeDigits } from "@/lib/format";
 import type { AlertSound, Food, MedColor, MedForm, Medicine, Repeat } from "@/lib/care/types";
-import { BackButton, EmptyState, Icon, MedGlyph, STICKY_ACTION, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
+import { BackButton, EmptyState, Icon, starterTips, MedGlyph, STICKY_ACTION, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
 const FORMS: MedForm[] = ["tablet", "capsule", "liquid", "injection"];
@@ -37,24 +37,28 @@ export function MedicinesScreen() {
           <h1>{t("meds.title")}</h1>
           <p className="mt-2 text-ink-2">{localizeDigits(t("meds.count", { count: profile.medicines.length }), locale)}</p>
         </div>
-        {/* A filter with a visible word, not a bare icon. */}
-        <button
-          type="button"
-          aria-pressed={lowOnly}
-          onClick={() => setLowOnly((value) => !value)}
-          className={`inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-[14px] font-medium ${lowOnly ? "bg-danger-soft text-danger" : "bg-accent-soft text-accent-ink"}`}
-          data-testid="filter-low"
-        >
-          <Icon name="battery" size={20} />
-          {t("meds.low")}
-        </button>
+        {/* A filter with a visible word, not a bare icon. Nothing to filter
+            until there is a medicine. */}
+        {profile.medicines.length > 0 ? (
+          <button
+            type="button"
+            aria-pressed={lowOnly}
+            onClick={() => setLowOnly((value) => !value)}
+            className={`inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-[14px] font-medium ${lowOnly ? "bg-danger-soft text-danger" : "bg-accent-soft text-accent-ink"}`}
+            data-testid="filter-low"
+          >
+            <Icon name="battery" size={20} />
+            {t("meds.low")}
+          </button>
+        ) : null}
       </div>
       {profile.medicines.length === 0 ? (
         <EmptyState
           icon={<Icon name="pill" size={40} />}
           title={t("meds.emptyTitle")}
           body={t("meds.emptyBody")}
-          action={<Link href="/medicines/new" className="font-medium text-accent-ink">{t("today.add")}</Link>}
+          action={<Link href="/medicines/new" className="btn btn-primary" data-testid="empty-add"><Icon name="plus" size={20} strokeWidth={2} />{t("today.add")}</Link>}
+          tips={starterTips(t)}
         />
       ) : meds.length === 0 ? (
         <p className="mt-8 text-center text-ink-2">{t("meds.noneLow")}</p>
@@ -295,7 +299,7 @@ export function MedicineForm({
         onBack={() => (step === 1 ? router.push(backTo) : setStep((value) => value - 1))}
       />
       <div className="mt-2 grid grid-cols-3 gap-1.5">
-        {[1, 2, 3].map((n) => <span key={n} className={`h-1.5 rounded-full ${n <= step ? "bg-accent" : "bg-bg-alt"}`} />)}
+        {[1, 2, 3].map((n) => <span key={n} className={`h-1.5 rounded-full ${n <= step ? "bg-accent" : "track-off"}`} />)}
       </div>
 
       {step === 1 && (

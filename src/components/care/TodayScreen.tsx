@@ -17,7 +17,7 @@ import {
 } from "@/lib/care/schedule";
 import { DATE_LOCALE, formatNumber } from "@/lib/format";
 import type { ScheduledDose } from "@/lib/care/types";
-import { DoseFlag, EmptyState, Icon, MedGlyph, Sheet } from "./chrome";
+import { DoseFlag, EmptyState, Icon, MedGlyph, Sheet, starterTips } from "./chrome";
 import { useShell } from "./AppShell";
 import { useCare } from "./store";
 
@@ -137,7 +137,8 @@ export function TodayScreen() {
           icon={<Icon name="bell" size={42} />}
           title={t("today.emptyTitle")}
           body={t("today.emptyBody")}
-          action={<Link href="/medicines/new" className="font-medium text-accent-ink">{t("today.add")}</Link>}
+          action={<Link href="/medicines/new" className="btn btn-primary" data-testid="empty-add"><Icon name="plus" size={20} strokeWidth={2} />{t("today.add")}</Link>}
+          tips={starterTips(t)}
         />
       ) : (
         <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">

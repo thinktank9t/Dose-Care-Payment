@@ -4,7 +4,10 @@ import { Suspense, createContext, useContext, useEffect, useMemo, useRef, useSta
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Backdrop } from "@/components/Backdrop";
 import { Sparkle } from "@/components/Sparkle";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import type { ThemeChoice } from "@/lib/theme";
 import { Icon } from "./chrome";
 import { useCare } from "./store";
 
@@ -40,14 +43,15 @@ export function useShell() {
  * cache. The care tabs render from local state, so a cached shell is never
  * stale for them; Profile re-reads its appearance settings on mount.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, theme }: { children: React.ReactNode; theme: ThemeChoice }) {
   const t = useTranslations("care");
   const nav = useTranslations("nav");
   const path = usePathname();
   const { ready, profile } = useCare();
   const onboarded = ready && profile.onboarded;
   const showNav = onboarded || isPayment(path);
-  const showAdd = onboarded && (path === "/" || path === "/medicines");
+  // With no medicines yet, the empty state carries the one "Add medicine" button.
+  const showAdd = onboarded && profile.medicines.length > 0 && (path === "/" || path === "/medicines");
   const [toastOpen, setToastOpen] = useState(false);
   const shell = useMemo<ShellApi>(() => ({ setToastOpen }), []);
 
@@ -143,6 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Suspense fallback={null}>
                 <LanguageSwitcher />
               </Suspense>
+              <ThemeToggle initial={theme} />
             </div>
           </div>
         </header>
@@ -151,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             (52px + 16px gap above the bar + 16px breathing room). */}
         <main
           id="main"
-          className={`flex-1 ${
+          className={`relative isolate flex-1 ${
             showAdd
               ? "pb-[calc(var(--tabbar-h,0px)+5.25rem)] md:pb-0"
               : showNav
@@ -159,6 +164,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 : ""
           }`}
         >
+          <Backdrop />
           {children}
         </main>
 
@@ -208,3 +214,4 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </ShellContext.Provider>
   );
 }
+
