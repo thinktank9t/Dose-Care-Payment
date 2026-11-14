@@ -9,6 +9,7 @@ import { formatBdt, formatDate, formatDateTime, userReference } from "@/lib/form
 import { SectionLabel } from "@/components/SectionLabel";
 import { Sparkle } from "@/components/Sparkle";
 import { StatusPill } from "@/components/StatusPill";
+import { ScreenHeader } from "@/components/care/chrome";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account");
@@ -55,12 +56,12 @@ export default async function AccountPage({
     status.kind === "active" ? t("extend") : status.kind === "ended" ? t("renew") : t("getPremium");
 
   return (
-    <div className="container-page py-12">
-      <div className="max-w-2xl space-y-8">
+    <div className="container-page py-8 lg:py-10">
+      <div className="mx-auto max-w-2xl space-y-8">
         {/* The person's name and sign-out live on Profile; this page is only
             about the plan, so the app never shows two different names. */}
         <section>
-          <h1>{t("title")}</h1>
+          <ScreenHeader title={t("title")} backHref="/profile" />
           <p className="mt-2 break-all text-small text-ink-2">{t("signedInAs", { email: user.email ?? session.email ?? "" })}</p>
         </section>
 
@@ -96,7 +97,7 @@ export default async function AccountPage({
             {t("paymentsTitle")}
           </h2>
           {payments.length === 0 ? (
-            <p className="mt-4 text-ink-2">{t("noPayments")}</p>
+            <p className="card mt-4 p-6 text-ink-2">{t("noPayments")}</p>
           ) : (
             <ul className="mt-4 space-y-3" data-testid="payments-list">
               {payments.map((p) => (

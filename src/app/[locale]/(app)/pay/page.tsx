@@ -10,6 +10,7 @@ import { formatDate, userReference } from "@/lib/format";
 import type { Locale } from "@/i18n/routing";
 import { Glyph } from "@/components/Glyph";
 import { PaymentFlow } from "@/components/PaymentFlow";
+import { ScreenHeader } from "@/components/care/chrome";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("pay");
@@ -42,10 +43,10 @@ export default async function PayPage({
   const loc = (await getLocale()) as Locale;
 
   return (
-    <div className="container-page py-12">
-      <div className="max-w-2xl">
-        <h1>{t("title")}</h1>
-        <p className="mt-3 text-body-lg text-ink-2">{t("subtitle")}</p>
+    <div className="container-page py-8 lg:py-10">
+      <div className="mx-auto max-w-2xl">
+        <ScreenHeader title={t("title")} backHref="/get-premium" />
+        <p className="mt-2 text-body-lg text-ink-2">{t("subtitle")}</p>
 
         {status.kind === "active" && status.until ? (
           <p className="mt-5 rounded-2xl bg-accent-soft px-4 py-3 text-small text-accent-ink">

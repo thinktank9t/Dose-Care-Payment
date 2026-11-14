@@ -104,7 +104,7 @@ export default async function LandingPage({
         </div>
         <p className="mt-4 text-small text-ink-2">{t("pricingNote")}</p>
         <div className="mt-6">
-          <CheckStatusCard />
+          <CheckStatusCard actionOnly />
         </div>
       </section>
 
@@ -113,9 +113,9 @@ export default async function LandingPage({
 
       {/* FAQ */}
       <section className="py-10" aria-labelledby="faq">
-        <SectionLabel className="mb-3" >{t("faqLabel")}</SectionLabel>
-        <h2 id="faq" className="sr-only">{t("faqLabel")}</h2>
-        <dl className="grid gap-4 sm:grid-cols-3">
+        <SectionLabel className="mb-3">{t("faqLabel")}</SectionLabel>
+        <h2 id="faq">{t("faqTitle")}</h2>
+        <dl className="mt-6 grid gap-4 sm:grid-cols-3">
           {faqs.map((n) => (
             <div key={n} className="card p-5">
               <dt className="font-semibold text-ink">{t(`faq${n}Q`)}</dt>

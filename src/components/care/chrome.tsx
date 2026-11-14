@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { MED_COLORS, isPast } from "@/lib/care/schedule";
 import type { MedColor, MedForm, ScheduledDose } from "@/lib/care/types";
 
@@ -215,17 +216,19 @@ export function Sheet({
 
   const t = useTranslations("care");
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(15,28,36,0.46)] p-4" onClick={onClose}>
+    // Phones: a bottom sheet resting on the tab bar (--tabbar-h, 0 when there
+    // is none). md and up: the centered dialog.
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(15,28,36,0.46)] md:items-center md:p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[min(86svh,720px)] w-full max-w-md overflow-y-auto rounded-3xl bg-surface p-6 shadow-[0_16px_40px_rgba(15,28,36,0.16)]"
+        className="mb-[var(--tabbar-h,0px)] max-h-[calc(100svh-var(--tabbar-h,0px)-3rem)] w-full overflow-y-auto rounded-t-3xl bg-surface px-[var(--gutter)] pb-6 pt-4 shadow-[0_-8px_32px_rgba(15,28,36,0.16)] md:mb-0 md:max-h-[min(86svh,720px)] md:max-w-md md:rounded-3xl md:p-6 md:shadow-[0_16px_40px_rgba(15,28,36,0.16)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          {title ? <h2 className="text-[22px]">{title}</h2> : <span />}
-          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink" onClick={onClose} aria-label={t("common.close")}>
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-line pb-3">
+          {title ? <h2 className="min-w-0 text-[22px]">{title}</h2> : <span />}
+          <button type="button" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink" onClick={onClose} aria-label={t("common.close")}>
             <Icon name="close" size={18} />
           </button>
         </div>
@@ -251,11 +254,15 @@ export function Toggle({
       aria-checked={on}
       aria-label={label}
       onClick={() => onChange(!on)}
-      className={`relative h-7 w-12 shrink-0 rounded-full border border-line transition-colors ${on ? "bg-accent" : "bg-bg-alt"}`}
+      className="flex min-h-11 shrink-0 items-center"
     >
-      <span
-        className={`absolute top-0.5 h-[22px] w-[22px] rounded-full bg-surface transition-all ${on ? "left-[22px]" : "left-0.5"}`}
-      />
+      {/* 32px track inside a 44px hit area. The knob moves by transform and
+          keeps a 3px inset at both ends, so it never touches the border. */}
+      <span className={`relative block h-8 w-[52px] rounded-full border transition-colors ${on ? "border-accent bg-accent" : "border-line bg-bg-alt"}`}>
+        <span
+          className={`absolute left-[3px] top-[3px] h-6 w-6 rounded-full bg-surface shadow-[0_1px_2px_rgba(15,28,36,0.2)] transition-transform ${on ? "translate-x-5" : "translate-x-0"}`}
+        />
+      </span>
     </button>
   );
 }
@@ -281,7 +288,9 @@ export function Segmented<T extends string>({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(option.value)}
-            className={`min-h-11 flex-1 rounded-[9px] px-2 text-[14px] ${
+            // Equal widths (basis-0), and long labels ("Extra large", "আরও বড়")
+            // wrap to a second line instead of being cut off.
+            className={`min-h-11 min-w-0 flex-1 basis-0 rounded-[9px] px-1.5 py-1.5 text-[14px] leading-tight [overflow-wrap:anywhere] ${
               active ? "bg-accent-soft font-medium text-accent-ink" : "text-ink-2"
             }`}
           >
@@ -293,29 +302,59 @@ export function Segmented<T extends string>({
   );
 }
 
+/**
+ * Wrapper for a screen's main button on a long form, phones only: it sticks
+ * directly above the tab bar (--tabbar-h) on a solid --bg band that the fields
+ * scroll behind. The band reaches the screen edges; the button inside stays on
+ * the gutter. From md up it is an ordinary block under the form.
+ */
+export const STICKY_ACTION =
+  "sticky bottom-[var(--tabbar-h,0px)] z-10 -mx-[var(--gutter)] mt-8 bg-bg px-[var(--gutter)] py-3 md:static md:mx-0 md:bg-transparent md:px-0 md:py-0";
+
+/**
+ * The one back control: a 44px circle on --bg-alt, so it reads on the page
+ * and on a white card alike. Its left edge sits on the gutter.
+ */
+export function BackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink"
+      aria-label={label}
+    >
+      <Icon name="back" size={22} />
+    </button>
+  );
+}
+
 export function ScreenHeader({
   title,
   eyebrow,
   onBack,
+  backHref,
   action,
 }: {
   title: string;
   eyebrow?: string;
   onBack?: () => void;
+  /** For server pages, which cannot pass a function: back is a link. */
+  backHref?: "/profile" | "/get-premium";
   action?: React.ReactNode;
 }) {
   const t = useTranslations("care");
   return (
-    <header className="flex items-center gap-3 px-1 py-2">
-      {onBack ? (
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-ink"
+    <header className="flex items-center gap-3 py-2">
+      {onBack ? <BackButton onClick={onBack} label={t("common.back")} /> : null}
+      {!onBack && backHref ? (
+        <Link
+          href={backHref}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-alt text-ink"
           aria-label={t("common.back")}
+          data-testid="screen-back"
         >
           <Icon name="back" size={22} />
-        </button>
+        </Link>
       ) : null}
       <div className="min-w-0 flex-1">
         {eyebrow ? <p className="label-micro">{eyebrow}</p> : null}

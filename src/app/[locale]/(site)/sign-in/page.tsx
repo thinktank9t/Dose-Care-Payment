@@ -53,12 +53,12 @@ export default async function SignInPage({
         <p className="mt-3 text-small text-ink-2">
           {t.rich("legal", {
             terms: (chunks) => (
-              <Link href="/terms" className="underline">
+              <Link href="/terms" className="-mx-1 -my-3 inline-block px-1 py-3 underline">
                 {chunks}
               </Link>
             ),
             privacy: (chunks) => (
-              <Link href="/privacy" className="underline">
+              <Link href="/privacy" className="-mx-1 -my-3 inline-block px-1 py-3 underline">
                 {chunks}
               </Link>
             ),

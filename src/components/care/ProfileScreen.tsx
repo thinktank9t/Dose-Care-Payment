@@ -10,7 +10,7 @@ import { applyContrast, applyTextScale, applyTheme } from "@/lib/appearance";
 import { locales, type Locale } from "@/i18n/routing";
 import { rememberLocaleChoice } from "@/i18n/locale-choice";
 import { TEXT_SCALES, THEME_CHOICES, type TextScale, type ThemeChoice } from "@/lib/theme";
-import { Icon, Segmented, Sheet } from "./chrome";
+import { Icon, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
 export function ProfileScreen({
@@ -55,7 +55,7 @@ export function ProfileScreen({
           <span className="block text-[18px] font-medium">{profile.name.trim() || t("today.friend")}</span>
           <span className="text-small text-ink-2">{profile.signedIn ? session?.email || t("profile.personal") : t("profile.guest")}</span>
         </span>
-        <button type="button" className="rounded-full bg-accent-soft px-4 py-2 font-medium text-accent-ink" onClick={() => { setDraft(profile.name); setEdit(true); }}>{t("profile.edit")}</button>
+        <button type="button" className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-accent-soft px-5 font-medium text-accent-ink" onClick={() => { setDraft(profile.name); setEdit(true); }}>{t("profile.edit")}</button>
       </section>
 
       <p className="label-micro mt-6">{t("profile.careTeam")}</p>
@@ -70,12 +70,12 @@ export function ProfileScreen({
       </div>
       <div>
       <p className="label-micro">{t("profile.accessibility")}</p>
-      <section className="card mt-2 divide-y divide-line p-4">
-        <button type="button" className="flex min-h-14 w-full items-center justify-between text-left" onClick={() => setLanguage(true)}>
+      <section className="card mt-2 divide-y divide-line px-4 py-1">
+        <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 py-3 text-left" onClick={() => setLanguage(true)}>
           <span className="inline-flex items-center gap-3"><Icon name="users" size={18} />{t("profile.language")}</span>
-          <span className="text-ink-2">{locale === "bn" ? t("setup.bangla") : t("setup.english")} <Icon name="chevron" size={16} /></span>
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-ink-2">{locale === "bn" ? t("setup.bangla") : t("setup.english")} <Icon name="chevron" size={16} /></span>
         </button>
-        <div className="py-3">
+        <div className="min-h-14 py-3">
           <p className="mb-2 inline-flex items-center gap-3"><Icon name="contrast" size={18} />{t("profile.textSize")}</p>
           <Segmented<TextScale>
             label={t("profile.textSize")}
@@ -84,7 +84,7 @@ export function ProfileScreen({
             options={TEXT_SCALES.map((item) => ({ value: item, label: t(item === "1" ? "profile.normal" : item === "1.15" ? "profile.large" : "profile.extra") }))}
           />
         </div>
-        <div className="py-3">
+        <div className="min-h-14 py-3">
           <p className="mb-2 inline-flex items-center gap-3"><Icon name="sun" size={18} />{t("profile.appearance")}</p>
           <Segmented<ThemeChoice>
             label={t("profile.appearance")}
@@ -93,26 +93,22 @@ export function ProfileScreen({
             options={THEME_CHOICES.map((item) => ({ value: item, label: t(`profile.theme.${item}`) }))}
           />
         </div>
-        <div className="flex items-center justify-between gap-3 pt-3">
+        <div className="flex min-h-14 items-center justify-between gap-3 py-3">
           <span>
             <span className="block">{t("profile.contrast")}</span>
             <span className="text-small text-ink-2">{t("profile.contrastHint")}</span>
           </span>
-          <button type="button" role="switch" aria-checked={high} aria-label={t("profile.contrast")} onClick={() => { const next = !high; setHigh(next); applyContrast(next); }} className={`relative h-7 w-12 rounded-full border border-line ${high ? "bg-accent" : "bg-bg-alt"}`}>
-            <span className={`absolute top-0.5 h-[22px] w-[22px] rounded-full bg-surface ${high ? "left-[22px]" : "left-0.5"}`} />
-          </button>
+          <Toggle on={high} label={t("profile.contrast")} onChange={(next) => { setHigh(next); applyContrast(next); }} />
         </div>
       </section>
 
       <p className="label-micro mt-6">{t("profile.notifications")}</p>
-      <section className="card mt-2 flex items-start justify-between gap-3 p-4">
+      <section className="card mt-2 flex items-center justify-between gap-3 p-4">
         <div>
           <p className="font-medium">{t("profile.fullScreen")}</p>
           <p className="text-small text-ink-2">{t("profile.fullScreenBody")}</p>
         </div>
-        <button type="button" role="switch" aria-checked={profile.fullScreenReminders} aria-label={t("profile.fullScreen")} onClick={() => setFullScreen(!profile.fullScreenReminders)} className={`relative mt-1 h-7 w-12 shrink-0 rounded-full border border-line ${profile.fullScreenReminders ? "bg-accent" : "bg-bg-alt"}`}>
-          <span className={`absolute top-0.5 h-[22px] w-[22px] rounded-full bg-surface ${profile.fullScreenReminders ? "left-[22px]" : "left-0.5"}`} />
-        </button>
+        <Toggle on={profile.fullScreenReminders} label={t("profile.fullScreen")} onChange={setFullScreen} />
       </section>
       <Link href="/reminder" className="mt-2 inline-flex min-h-11 items-center font-medium text-accent-ink">{t("profile.preview")}</Link>
 

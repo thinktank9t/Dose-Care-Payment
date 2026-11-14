@@ -76,8 +76,8 @@ export function HistoryScreen() {
         <h2 className="text-[22px]">{title}</h2>
         <button type="button" className="flex h-11 w-11 items-center justify-center" aria-label={t("history.next")} onClick={() => shift(1)}><Icon name="chevron" /></button>
       </div>
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[12px] text-ink-3">
-        {weekdays.map((day) => <span key={day}>{day}</span>)}
+      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[12px] text-ink-2">
+        {weekdays.map((day, index) => <span key={index} className="whitespace-nowrap">{day}</span>)}
       </div>
       <div className="mt-1 grid grid-cols-7 gap-1">
         {cells.map((cell) => {
