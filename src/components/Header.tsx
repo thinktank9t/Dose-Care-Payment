@@ -1,18 +1,22 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth/session";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { Sparkle } from "./Sparkle";
 
 /**
  * One 64px row at every width: logo on the left; Pricing and Get Premium (sm
- * and up), the language switch and Sign in / Open app on the right. Theme and
- * contrast live on Profile, so the row never has to wrap on a phone. Solid
- * background so content never shows through the single hairline.
+ * and up), the language switch, the light/dark toggle and Sign in / Open app
+ * on the right. Contrast and "System" theme live on Profile. Solid background
+ * so content never shows through the single hairline.
  */
 export async function Header() {
   const t = await getTranslations("nav");
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   let signedIn = false;
   try {
     signedIn = Boolean(await getSession());
@@ -32,7 +36,9 @@ export async function Header() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
             <Sparkle size={16} />
           </span>
-          <span>Dose Care</span>
+          {/* Under 400px the row also holds language, theme and Sign in, so the
+              wordmark steps back to the logo mark (still read by screen readers). */}
+          <span className="max-[399px]:sr-only">Dose Care</span>
         </Link>
 
         <nav className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label={t("menu")}>
@@ -52,6 +58,7 @@ export async function Header() {
           <Suspense fallback={null}>
             <LanguageSwitcher />
           </Suspense>
+          <ThemeToggle initial={theme} />
           {/* The way into the app from the public pages. */}
           <Link
             href={signedIn ? "/" : "/sign-in?next=%2F"}

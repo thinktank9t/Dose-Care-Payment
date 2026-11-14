@@ -44,7 +44,7 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
 
   return (
     <div className="container-page flex min-h-[calc(100svh-4rem)] items-center py-10">
-    <div className={`mx-auto flex w-full max-w-lg flex-col rounded-3xl px-6 py-8 text-on-accent sm:px-8 ${loud ? "bg-[#06324A]" : "bg-accent"}`}>
+    <div className={`mx-auto flex w-full max-w-lg flex-col rounded-3xl px-6 py-8 sm:px-8 ${loud ? "bg-[#06324A] text-white" : "bg-accent text-on-accent"}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-small">
           <Icon name="bell" size={16} /> {t("reminder.kicker")}
@@ -66,7 +66,7 @@ export function ReminderScreen({ medId, time }: { medId?: string; time?: string 
         <h1 className="mt-1 text-[40px]">{due.medicine.name}</h1>
         <p className="mt-2 opacity-90">{t("reminder.body")}</p>
       </div>
-      <button type="button" className="btn w-full bg-surface text-accent-ink" onClick={() => act(due, "taken")}>
+      <button type="button" className={`btn w-full ${loud ? "bg-white text-[#06324A]" : "bg-surface text-accent-ink"}`} onClick={() => act(due, "taken")}>
         <Icon name="check" size={18} /> {t("reminder.took")}
       </button>
       <div className="mt-3 grid grid-cols-3 gap-2">

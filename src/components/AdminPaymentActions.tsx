@@ -26,6 +26,10 @@ export function AdminPaymentActions({ paymentId }: { paymentId: string }) {
     <form action={action} className="flex w-56 flex-col gap-2" aria-busy={pending}>
       <input type="hidden" name="paymentId" value={paymentId} />
       <input
+        // Autofill / password-manager extensions add attributes (e.g.
+        // data-has-listeners) before React hydrates. Ignore attribute
+        // differences on this one field only.
+        suppressHydrationWarning
         name="note"
         maxLength={500}
         placeholder={t("notePlaceholder")}

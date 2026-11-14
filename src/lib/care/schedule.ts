@@ -1,11 +1,12 @@
 import type { CarePerson, DoseLog, DoseStatus, MedColor, Medicine, ScheduledDose } from "./types";
 
+/** Theme-aware: the values live in globals.css (--med-*), with dark variants. */
 export const MED_COLORS: Record<MedColor, { bg: string; fg: string }> = {
-  sand: { bg: "#F4E6D4", fg: "#8A5A2A" },
-  sky: { bg: "#D7E7EF", fg: "#0B5575" },
-  blush: { bg: "#F6DDE6", fg: "#8C3E55" },
-  stone: { bg: "#E8E2D8", fg: "#5E564C" },
-  mint: { bg: "#D9EFE6", fg: "#1E6B4A" },
+  sand: { bg: "var(--med-sand-bg)", fg: "var(--med-sand-fg)" },
+  sky: { bg: "var(--med-sky-bg)", fg: "var(--med-sky-fg)" },
+  blush: { bg: "var(--med-blush-bg)", fg: "var(--med-blush-fg)" },
+  stone: { bg: "var(--med-stone-bg)", fg: "var(--med-stone-fg)" },
+  mint: { bg: "var(--med-mint-bg)", fg: "var(--med-mint-fg)" },
 };
 
 export function dateKey(date: Date): string {

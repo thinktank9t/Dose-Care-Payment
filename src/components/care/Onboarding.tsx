@@ -88,7 +88,7 @@ export function Onboarding() {
             <p className="label-micro">{t("setup.step", { step: formatNumber(step, locale) })}</p>
             <div className="mt-2 grid grid-cols-3 gap-1.5">
               {[1, 2, 3].map((n) => (
-                <span key={n} className={`h-1.5 rounded-full ${n <= step ? "bg-accent" : "bg-bg-alt"}`} />
+                <span key={n} className={`h-1.5 rounded-full ${n <= step ? "bg-accent" : "track-off"}`} />
               ))}
             </div>
           </div>
@@ -190,7 +190,7 @@ export function Onboarding() {
       </div>
       <div className="mb-4 flex items-center justify-center gap-1.5" aria-hidden>
         {slides.map((_, index) => (
-          <span key={index} className={`h-1.5 rounded-full ${index === profile.slide ? "w-6 bg-accent" : "w-1.5 bg-bg-alt"}`} />
+          <span key={index} className={`h-1.5 rounded-full ${index === profile.slide ? "w-6 bg-accent" : "w-1.5 track-off"}`} />
         ))}
       </div>
       <p className="mb-3 text-center text-small text-ink-2">{t("onboard.step", { step: profile.slide + 1 })}</p>

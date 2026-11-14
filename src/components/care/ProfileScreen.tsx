@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { signInWithGoogle, signOut } from "@/lib/actions/auth";
 import { GoogleMark } from "@/components/GoogleMark";
 import { Sparkle } from "@/components/Sparkle";
-import { applyContrast, applyTextScale, applyTheme } from "@/lib/appearance";
+import { THEME_EVENT, applyContrast, applyTextScale, switchTheme } from "@/lib/appearance";
 import { locales, type Locale } from "@/i18n/routing";
 import { rememberLocaleChoice } from "@/i18n/locale-choice";
 import { TEXT_SCALES, THEME_CHOICES, type TextScale, type ThemeChoice } from "@/lib/theme";
@@ -42,6 +42,10 @@ export function ProfileScreen({
     setHigh(root.dataset.contrast === "high");
     const percent = Math.round(parseFloat(root.style.fontSize) || 100);
     setSize(percent === 115 ? "1.15" : percent === 130 ? "1.3" : "1");
+    // The header toggle can change the theme while this page is open.
+    const onTheme = (event: Event) => setMode((event as CustomEvent<ThemeChoice>).detail);
+    window.addEventListener(THEME_EVENT, onTheme);
+    return () => window.removeEventListener(THEME_EVENT, onTheme);
   }, []);
 
   return (
@@ -89,7 +93,7 @@ export function ProfileScreen({
           <Segmented<ThemeChoice>
             label={t("profile.appearance")}
             value={mode}
-            onChange={(next) => { setMode(next); applyTheme(next); }}
+            onChange={(next) => { setMode(next); switchTheme(next); }}
             options={THEME_CHOICES.map((item) => ({ value: item, label: t(`profile.theme.${item}`) }))}
           />
         </div>
