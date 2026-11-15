@@ -96,8 +96,12 @@ export function serviceRoleKey(): string {
 }
 
 export function supabasePublicConfig() {
-  const url = readEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const anonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  // Must stay literal `process.env.NEXT_PUBLIC_…` reads: Next only inlines
+  // public values into browser code when written out like this. A dynamic
+  // read (readEnv) is always empty in the browser, which broke every
+  // client-side Supabase call (e.g. the plan list on Get Premium).
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
+  const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim();
   if (!url || !anonKey) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.",

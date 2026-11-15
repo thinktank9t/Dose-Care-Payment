@@ -508,7 +508,10 @@
       "keyTaken": "নেওয়া",
       "keyMissed": "মিস",
       "keyToday": "আজ",
-      "anyFood": "যেকোনো সময়"
+      "anyFood": "যেকোনো সময়",
+      "dueToday": "আজ",
+      "todayProgress": "আজ: {total, number}টির মধ্যে {taken, number}টি নেওয়া",
+      "todayDone": "আজকের সব নেওয়া"
     },
     "form": {
       "step": "ধাপ {step} / ৩",
@@ -553,7 +556,16 @@
       "continueSchedule": "সময়সূচিতে যান",
       "continueSupply": "স্টকে যান",
       "save": "ওষুধ সংরক্ষণ করুন",
-      "pickInterval": "কত দিন পর পর"
+      "pickInterval": "কত দিন পর পর",
+      "requiredNote": "* চিহ্নিত ঘরগুলো পূরণ করা আবশ্যক।",
+      "optional": "ঐচ্ছিক",
+      "nameRequired": "এগোতে ওষুধের নাম লিখুন।",
+      "endBeforeStart": "শেষের তারিখ শুরুর তারিখের আগে হতে পারে না।",
+      "timesRequired": "অন্তত একটি সময় যোগ করুন।",
+      "packRequired": "পুরো প্যাকে কয়টি থাকে লিখুন।",
+      "resetTimes": "রিসেট",
+      "quickTimes": "দ্রুত বেছে নিন",
+      "changeTime": "{n} নম্বর সময় বদলান"
     },
     "history": {
       "title": "ইতিহাস",

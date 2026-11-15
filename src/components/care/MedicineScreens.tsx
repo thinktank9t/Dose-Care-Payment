@@ -10,13 +10,14 @@ import {
   daysOfSupply,
   formatClock,
   isLow,
+  occursOn,
   scheduledDoses,
   todayKey,
   unitKey,
   weekMarks,
 } from "@/lib/care/schedule";
 import { formatNumber, localizeDigits } from "@/lib/format";
-import type { AlertSound, Food, MedColor, MedForm, Medicine, Repeat } from "@/lib/care/types";
+import type { AlertSound, DoseLog, Food, MedColor, MedForm, Medicine, Repeat } from "@/lib/care/types";
 import { BackButton, EmptyState, Icon, starterTips, MedGlyph, STICKY_ACTION, ScreenHeader, Segmented, Sheet, Toggle } from "./chrome";
 import { useCare } from "./store";
 
@@ -29,7 +30,13 @@ export function MedicinesScreen() {
   const locale = useLocale() as Locale;
   const { profile } = useCare();
   const [lowOnly, setLowOnly] = useState(false);
-  const meds = lowOnly ? profile.medicines.filter(isLow) : profile.medicines;
+  const today = todayKey();
+  const dueToday = (med: Medicine) => !med.paused && occursOn(med, today);
+  // Today's medicines first (stable within each group).
+  const meds = (lowOnly ? profile.medicines.filter(isLow) : profile.medicines)
+    .map((med, index) => ({ med, index }))
+    .sort((a, b) => Number(dueToday(b.med)) - Number(dueToday(a.med)) || a.index - b.index)
+    .map((item) => item.med);
 
   return (
     <div className="container-page py-8 lg:py-10">
@@ -70,7 +77,7 @@ export function MedicinesScreen() {
         <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2 xl:grid-cols-3">
           {meds.map((med) => (
             <li key={med.id}>
-              <MedicineCard med={med} />
+              <MedicineCard med={med} logs={profile.logs} />
             </li>
           ))}
         </ul>
@@ -84,17 +91,24 @@ export function MedicinesScreen() {
  * and how much is left (bottom). Only an exception gets a pill (low stock or
  * paused); "active" is the normal state and needs no label.
  */
-function MedicineCard({ med }: { med: Medicine }) {
+function MedicineCard({ med, logs }: { med: Medicine; logs: DoseLog[] }) {
   const t = useTranslations("care");
   const locale = useLocale() as Locale;
   const low = isLow(med);
+  // Due today: an accent edge, a "Today" badge, and how many of today's doses are taken.
+  const todays = med.paused ? [] : scheduledDoses([med], logs, todayKey());
+  const isToday = todays.length > 0;
+  const takenToday = todays.filter((dose) => dose.status === "taken").length;
+  const allDone = isToday && takenToday === todays.length;
   const unit = t(`unit.${unitKey(med.form)}`);
   const note = conditionNote(med.condition);
   return (
     <Link
       href={`/medicines/${med.id}`}
-      className={`card flex h-full flex-col gap-4 p-4 transition-colors hover:border-ink-2 ${med.paused ? "opacity-75" : ""}`}
+      className={`card relative flex h-full flex-col gap-4 overflow-hidden p-4 transition-colors hover:border-ink-2 ${med.paused ? "opacity-75" : ""} ${isToday ? "!border-accent/60" : ""}`}
+      data-today={isToday || undefined}
     >
+      {isToday ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-accent" /> : null}
       <span className="flex items-start gap-3">
         <MedGlyph form={med.form} color={med.color} />
         <span className="min-w-0 flex-1">
@@ -103,9 +117,21 @@ function MedicineCard({ med }: { med: Medicine }) {
           {note ? <span className="mt-0.5 block truncate text-small text-ink-2">{t("meds.forCondition", { condition: note })}</span> : null}
         </span>
         {med.paused ? <span className="pill shrink-0 bg-bg-alt text-ink-2">{t("meds.paused")}</span> : null}
+        {isToday ? (
+          <span className={`pill inline-flex shrink-0 items-center gap-1 ${allDone ? "bg-accent text-on-accent" : "bg-accent-soft text-accent-ink"}`}>
+            {allDone ? <Icon name="check" size={12} strokeWidth={2.4} /> : <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />}
+            {t("meds.dueToday")}
+          </span>
+        ) : null}
         <span aria-hidden className="mt-1 shrink-0 text-ink-2"><Icon name="chevron" size={18} /></span>
       </span>
       <span className="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-3 text-small text-ink-2">
+        {isToday ? (
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${allDone ? "bg-accent text-on-accent" : "bg-accent-soft text-accent-ink"}`}>
+            <Icon name={allDone ? "check" : "calendar"} size={14} strokeWidth={allDone ? 2.4 : 1.6} />
+            {allDone ? t("meds.todayDone") : t("meds.todayProgress", { taken: takenToday, total: todays.length })}
+          </span>
+        ) : null}
         <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-alt px-2.5 py-1">
           <Icon name="clock" size={14} />
           {med.times.map((time) => formatClock(time, locale)).join(", ")}
@@ -160,6 +186,23 @@ function MedsArt() {
       <path d="M338 22l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" />
     </svg>
   );
+}
+
+/** Common dose times offered as one-tap chips. */
+const QUICK_TIMES = ["08:00", "14:00", "20:00", "22:00"];
+
+function sameTimes(a: string[], b: string[]) {
+  return a.length === b.length && [...a].sort().every((time, i) => time === [...b].sort()[i]);
+}
+
+/** A time not already in the list for "Add another time" (duplicates would be one dose). */
+function nextFreeTime(times: string[]) {
+  for (const time of ["20:00", ...QUICK_TIMES, "12:00", "18:00", "06:00"]) if (!times.includes(time)) return time;
+  for (let hour = 0; hour < 24; hour++) {
+    const time = `${String(hour).padStart(2, "0")}:00`;
+    if (!times.includes(time)) return time;
+  }
+  return "20:00";
 }
 
 function formIcon(form: MedForm) {
@@ -431,10 +474,29 @@ export function MedicineForm({
   const [intervalOpen, setIntervalOpen] = useState(false);
   const patch = (partial: Partial<Medicine>) => setMed((current) => ({ ...current, ...partial }));
   const backTo = personId ? `/care/${personId}` : "/medicines";
+  // Errors show only after the person tries to continue, never while typing.
+  const [tried, setTried] = useState(false);
+  const nameError = !med.name.trim() ? t("form.nameRequired") : null;
+  const dateError = med.endDate && med.endDate < med.startDate ? t("form.endBeforeStart") : null;
+  const timesError = med.times.length === 0 || med.times.some((time) => !time) ? t("form.timesRequired") : null;
+  const [initialTimes] = useState(() => (existing ? [...existing.times] : ["08:00"]));
+  const packError = med.trackSupply && !(med.packSize > 0) ? t("form.packRequired") : null;
+  const stepError = step === 1 ? nameError : step === 2 ? dateError ?? timesError : packError;
+  const stepValid = !stepError;
+
+  function next() {
+    if (!stepValid) {
+      setTried(true);
+      document.getElementById(step === 1 ? "med-name" : "med-ends")?.focus();
+      return;
+    }
+    setTried(false);
+    setStep((value) => value + 1);
+  }
 
   function save() {
     const next = { ...med, name: med.name.trim() };
-    if (!next.name || next.times.length === 0) return;
+    if (!next.name || next.times.length === 0 || dateError || packError) return;
     saveMedicine(next, personId);
     router.push(existing ? `${personId ? `/care/${personId}/med` : "/medicines"}/${next.id}` : backTo);
   }
@@ -453,9 +515,24 @@ export function MedicineForm({
 
       {step === 1 && (
         <div className="mt-5 space-y-4">
+          <p className="text-small text-ink-2">{t("form.requiredNote")}</p>
           <div>
-            <label className="block text-small text-ink-2" htmlFor="med-name">{t("form.name")}</label>
-            <input id="med-name" className="field mt-2 w-full" placeholder={t("form.namePh")} value={med.name} onChange={(event) => patch({ name: event.target.value })} />
+            <label className="block text-small text-ink-2" htmlFor="med-name">
+              {t("form.name")} <span className="text-danger" aria-hidden>*</span>
+            </label>
+            <input
+              id="med-name"
+              required
+              aria-required
+              aria-invalid={tried && !!nameError}
+              aria-describedby={tried && nameError ? "med-name-error" : undefined}
+              className={`field mt-2 w-full ${tried && nameError ? "!border-danger" : ""}`}
+              placeholder={t("form.namePh")}
+              value={med.name}
+              onBlur={() => setTried(true)}
+              onChange={(event) => patch({ name: event.target.value })}
+            />
+            {tried && nameError ? <p id="med-name-error" className="mt-1.5 text-small text-danger" role="alert">{nameError}</p> : null}
           </div>
           <div>
           <p className="text-small text-ink-2">{t("form.form")}</p>
@@ -491,11 +568,11 @@ export function MedicineForm({
             </div>
           </div>
           <div>
-            <label className="block text-small text-ink-2" htmlFor="condition">{t("form.condition")}</label>
+            <label className="block text-small text-ink-2" htmlFor="condition">{t("form.condition")} <span className="text-ink-3">({t("form.optional")})</span></label>
             <input id="condition" className="field mt-2 w-full" placeholder={t("form.conditionPh")} value={med.condition} onChange={(event) => patch({ condition: event.target.value })} />
           </div>
           <div>
-            <label className="block text-small text-ink-2" htmlFor="notes">{t("form.notes")}</label>
+            <label className="block text-small text-ink-2" htmlFor="notes">{t("form.notes")} <span className="text-ink-3">({t("form.optional")})</span></label>
             <textarea id="notes" className="field mt-2 min-h-24 w-full py-3" placeholder={t("form.notesPh")} value={med.sideEffects} onChange={(event) => patch({ sideEffects: event.target.value })} />
           </div>
         </div>
@@ -532,15 +609,66 @@ export function MedicineForm({
               <Icon name="chevron" size={18} />
             </button>
           ) : null}
-          <p className="text-small text-ink-2">{t("form.times")}</p>
-          {med.times.map((time) => (
-            <label key={time} className="card flex items-center gap-2 px-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-small text-ink-2">{t("form.times")} <span className="text-danger" aria-hidden>*</span></p>
+            {/* Back to the saved times (or 8:00 for a new medicine). */}
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-small font-medium text-accent-ink hover:bg-bg-alt disabled:opacity-50"
+              disabled={sameTimes(med.times, initialTimes)}
+              onClick={() => patch({ times: [...initialTimes] })}
+              data-testid="times-reset"
+            >
+              <Icon name="snooze" size={16} />
+              {t("form.resetTimes")}
+            </button>
+          </div>
+          {/* Quick pick: tap to add or remove a common time. */}
+          <div>
+            <p className="sr-only">{t("form.quickTimes")}</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t("form.quickTimes")}>
+              {QUICK_TIMES.map((time) => {
+                const on = med.times.includes(time);
+                return (
+                  <button
+                    key={time}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => patch({ times: on ? med.times.filter((item) => item !== time) : [...med.times, time].sort() })}
+                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-[14px] ${on ? "border-accent bg-accent-soft font-medium text-accent-ink" : "border-line text-ink-2 hover:text-ink"}`}
+                  >
+                    {on ? <Icon name="check" size={14} strokeWidth={2.4} /> : null}
+                    {formatClock(time, locale)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {med.times.map((time, index) => (
+            // Keyed by position: editing one time to match another must not
+            // merge the two rows.
+            <div key={index} className="card flex items-center gap-3 px-3">
               <Icon name="clock" size={18} />
-              <input className="min-h-12 flex-1 bg-transparent" type="time" value={time} onChange={(event) => patch({ times: med.times.map((item) => item === time ? event.target.value : item) })} />
-              {med.times.length > 1 ? <button type="button" className="-mr-1.5 flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-bg-alt" aria-label={t("form.removeTime")} onClick={() => patch({ times: med.times.filter((item) => item !== time) })}><Icon name="close" size={18} /></button> : null}
-            </label>
+              {/* The time in the page's language (the browser's own picker
+                  may show English digits); the picker changes it. */}
+              <span className="min-w-0 flex-1 text-[17px] font-medium">{time ? formatClock(time, locale) : "—"}</span>
+              <input
+                className="min-h-12 w-[8.5rem] shrink-0 bg-transparent text-ink-2"
+                type="time"
+                aria-label={t("form.changeTime", { n: formatNumber(index + 1, locale) })}
+                value={time}
+                onChange={(event) => patch({ times: med.times.map((item, i) => (i === index ? event.target.value : item)) })}
+              />
+              {med.times.length > 1 ? (
+                <button type="button" className="-mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-bg-alt" aria-label={t("form.removeTime")} onClick={() => patch({ times: med.times.filter((_, i) => i !== index) })}>
+                  <Icon name="close" size={18} />
+                </button>
+              ) : null}
+            </div>
           ))}
-          <button type="button" className="min-h-12 w-full rounded-[18px] border border-dashed border-line text-ink-2" onClick={() => patch({ times: [...med.times, "20:00"] })}>{t("form.addTime")}</button>
+          <button type="button" className="min-h-12 w-full rounded-[18px] border border-dashed border-line text-ink-2 hover:text-ink" onClick={() => patch({ times: [...med.times, nextFreeTime(med.times)] })}>
+            <Icon name="plus" size={16} /> {t("form.addTime")}
+          </button>
           <p className="text-small text-ink-2">{t("form.food")}</p>
           <Segmented<Food>
             label={t("form.food")}
@@ -557,12 +685,25 @@ export function MedicineForm({
               {t("form.starts")}
               <input className="mt-1 w-full bg-transparent text-[16px] text-ink" type="date" value={med.startDate} onChange={(event) => patch({ startDate: event.target.value || todayKey() })} />
             </label>
-            <label className="card p-3 text-small text-ink-2">
-              {t("form.ends")}
-              <input className="mt-1 w-full bg-transparent text-[16px] text-ink" type="date" value={med.endDate ?? ""} onChange={(event) => patch({ endDate: event.target.value || null })} />
+            {/* The date picker can't offer days before the start; a typed or
+                older value is still caught below. */}
+            <label className={`card p-3 text-small text-ink-2 ${dateError ? "!border-danger" : ""}`}>
+              {t("form.ends")} <span className="text-ink-3">({t("form.optional")})</span>
+              <input
+                id="med-ends"
+                className="mt-1 w-full bg-transparent text-[16px] text-ink"
+                type="date"
+                min={med.startDate}
+                aria-invalid={!!dateError}
+                aria-describedby={dateError ? "med-ends-error" : undefined}
+                value={med.endDate ?? ""}
+                onChange={(event) => patch({ endDate: event.target.value || null })}
+              />
               {!med.endDate ? <span className="mt-1 block text-ink">{t("form.ongoing")}</span> : null}
             </label>
           </div>
+          {dateError ? <p id="med-ends-error" className="-mt-2 text-small text-danger" role="alert">{dateError}</p> : null}
+          {tried && timesError ? <p className="-mt-2 text-small text-danger" role="alert">{timesError}</p> : null}
           <button type="button" className="card flex w-full items-center justify-between p-4" onClick={() => setSoundOpen(true)}>
             <span>{t("form.sound")}</span>
             <span className="text-accent-ink">{t(`sound.${med.alertSound}`)} <Icon name="chevron" size={16} /></span>
@@ -594,7 +735,7 @@ export function MedicineForm({
                 <input id="stock" className="field mt-2 w-full" inputMode="numeric" value={med.stock} onChange={(event) => patch({ stock: Number(event.target.value) || 0 })} />
               </div>
               <div>
-                <label className="block text-small text-ink-2" htmlFor="pack">{t("form.pack")}</label>
+                <label className="block text-small text-ink-2" htmlFor="pack">{t("form.pack")} <span className="text-danger" aria-hidden>*</span></label>
                 <input id="pack" className="field mt-2 w-full" inputMode="numeric" value={med.packSize} onChange={(event) => patch({ packSize: Number(event.target.value) || 0 })} />
               </div>
               <div>
@@ -611,7 +752,15 @@ export function MedicineForm({
           lets the fields scroll behind it. */}
       <div className={`${STICKY_ACTION} md:mt-10 md:border-t md:border-line md:pt-6`}>
         {/* A standard form footer: Back on the left, the step's main action
-            on the right. On a phone the two share one row. */}
+            on the right. On a phone the two share one row. The main action
+            stays disabled until the step's required fields are filled, and
+            the line above it says what is missing. */}
+        {stepError ? (
+          <p className="mb-2 flex items-center gap-1.5 text-small text-ink-2 md:justify-end" role="status" data-testid="form-missing">
+            <span className="text-danger" aria-hidden>*</span>
+            {stepError}
+          </p>
+        ) : null}
         <div className="flex items-center gap-3 md:justify-between">
           <button
             type="button"
@@ -621,12 +770,12 @@ export function MedicineForm({
             {t("common.back")}
           </button>
           {step < 3 ? (
-            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" disabled={step === 1 && !med.name.trim()} onClick={() => setStep((value) => value + 1)}>
+            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" disabled={!stepValid} onClick={next}>
               {step === 1 ? t("form.continueSchedule") : t("form.continueSupply")}
               <Icon name="chevron" size={18} />
             </button>
           ) : (
-            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" onClick={save}>
+            <button type="button" className="btn btn-primary min-w-0 flex-1 md:flex-none md:px-8" disabled={!stepValid} onClick={save}>
               <Icon name="check" size={18} /> {t("form.save")}
             </button>
           )}

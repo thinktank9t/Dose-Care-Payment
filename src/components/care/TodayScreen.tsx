@@ -130,8 +130,20 @@ export function TodayScreen() {
         <h1 className="min-w-0 flex-1">
           {t(`today.${greetingKey(now)}`)}, {profile.name.trim() || t("today.friend")}.
         </h1>
-        <Link href="/profile" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-soft font-heading text-[20px] text-accent-ink" aria-label={t("tabs.profile")}>
-          {initial}
+        {/* A labelled chip, not a bare initial: the word "Profile" and the
+            chevron say it opens something. */}
+        <Link
+          href="/profile"
+          className="group inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-[14px] font-medium text-ink transition-colors hover:border-accent"
+          data-testid="today-profile"
+        >
+          <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft font-heading text-[18px] text-accent-ink">
+            {initial}
+          </span>
+          {t("tabs.profile")}
+          <span aria-hidden className="text-ink-2 transition-transform group-hover:translate-x-0.5">
+            <Icon name="chevron" size={16} />
+          </span>
         </Link>
       </div>
 
