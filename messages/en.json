@@ -508,7 +508,10 @@
       "keyTaken": "Taken",
       "keyMissed": "Missed",
       "keyToday": "Today",
-      "anyFood": "Any time"
+      "anyFood": "Any time",
+      "dueToday": "Today",
+      "todayProgress": "Today: {taken, number} of {total, number} taken",
+      "todayDone": "Today's done"
     },
     "form": {
       "step": "Step {step} of 3",
@@ -553,7 +556,16 @@
       "continueSchedule": "Continue to schedule",
       "continueSupply": "Continue to supply",
       "save": "Save medicine",
-      "pickInterval": "Repeat every"
+      "pickInterval": "Repeat every",
+      "requiredNote": "Fields marked * are required.",
+      "optional": "optional",
+      "nameRequired": "Enter the medicine name to continue.",
+      "endBeforeStart": "The end date can't be before the start date.",
+      "timesRequired": "Add at least one time.",
+      "packRequired": "Enter how many come in a full pack.",
+      "resetTimes": "Reset",
+      "quickTimes": "Quick pick",
+      "changeTime": "Change time {n}"
     },
     "history": {
       "title": "History",

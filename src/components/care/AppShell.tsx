@@ -122,7 +122,10 @@ export function AppShell({ children, theme }: { children: React.ReactNode; theme
             </Link>
             {showNav ? (
               <nav className="hidden flex-1 items-center gap-1 md:flex" aria-label={t("tabs.label")}>
-                {tabs.map((tab) => (
+                {/* Today has its own Profile chip beside the greeting, so the
+                    top bar drops its Profile link there (no double "Profile").
+                    The phone tab bar keeps all five so its slots never shift. */}
+                {tabs.filter((tab) => !(tab.id === "profile" && path === "/")).map((tab) => (
                   <Link
                     key={tab.id}
                     href={tab.href}
