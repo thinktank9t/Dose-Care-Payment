@@ -50,3 +50,6 @@ yarn-error.log*
 # os
 .DS_Store
 Thumbs.db
+
+# MCP config holds a Supabase personal access token
+.mcp.json

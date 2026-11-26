@@ -14,7 +14,8 @@ import type {
 /**
  * In-memory stand-in for the Supabase project, used only when
  * E2E_FAKE_BACKEND=1. Mirrors the rules in
- * supabase/migrations/20260913180000_website_payments.sql so the Playwright
+ * supabase/migrations/20260913180000_website_payments.sql and the premium
+ * writer rules in 20261127000000_align_premium_writers.sql so the Playwright
  * suite exercises the same behaviour: trx normalisation, uniqueness, the
  * 5-pending limit, idempotent verify/reject and premium stacking.
  */
@@ -42,11 +43,20 @@ export function resetFakeStore() {
   g.__doseCareFakeStore = undefined;
 }
 
+/**
+ * Mirrors grant_premium(): fixed 30/365 days (not calendar months), ending at
+ * 00:00 Asia/Dhaka like dhaka_day_start_after(). Dhaka is UTC+6 with no DST,
+ * so the boundary is 18:00 UTC the previous day.
+ */
 function addPeriod(from: Date, period: "monthly" | "yearly"): Date {
-  const d = new Date(from);
-  if (period === "monthly") d.setMonth(d.getMonth() + 1);
-  else d.setFullYear(d.getFullYear() + 1);
-  return d;
+  const days = period === "monthly" ? 30 : 365;
+  const dhaka = new Date(from.getTime() + 6 * 3600_000);
+  const dayStart = Date.UTC(
+    dhaka.getUTCFullYear(),
+    dhaka.getUTCMonth(),
+    dhaka.getUTCDate(),
+  );
+  return new Date(dayStart + days * 86_400_000 - 6 * 3600_000);
 }
 
 export class FakeRepo implements Repo {
@@ -143,7 +153,9 @@ export class FakeRepo implements Repo {
     p.verified_by = adminEmail.trim().toLowerCase();
     p.verified_at = new Date().toISOString();
 
-    // activate_premium(): extend from the current end when still premium.
+    // grant_premium(): extend from the current end when still premium, so
+    // periods never overlap. Trials are not modelled here; the real function
+    // also starts from trial_ends_at so buying early does not burn trial days.
     const u = store().users.get(p.user_id);
     if (!u) throw new Error("USER_NOT_FOUND");
     const now = new Date();

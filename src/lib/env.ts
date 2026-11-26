@@ -95,6 +95,38 @@ export function serviceRoleKey(): string {
   return key;
 }
 
+/**
+ * The two Supabase projects. Production must use Prod, every other
+ * environment must use Dev — a crossed deploy once pointed the live site at
+ * the Dev database (scripts/fix-production-oauth.ps1), so this is enforced
+ * rather than documented.
+ */
+export const SUPABASE_PROJECT_REFS = {
+  prod: "zonvummielhetzcyootb",
+  dev: "ikqztmmyltuuacjnqmie",
+} as const;
+
+export function supabaseProjectRef(url: string): string | null {
+  return url.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? null;
+}
+
+/** Throws when the resolved project does not match the deploy environment. */
+function assertProjectMatchesEnvironment(url: string): void {
+  const vercelEnv = process.env.VERCEL_ENV;
+  if (!vercelEnv) return; // local: whatever .env.local says
+  const ref = supabaseProjectRef(url);
+  const expected =
+    vercelEnv === "production"
+      ? SUPABASE_PROJECT_REFS.prod
+      : SUPABASE_PROJECT_REFS.dev;
+  if (ref !== expected) {
+    throw new Error(
+      `Supabase project mismatch: VERCEL_ENV=${vercelEnv} requires project ` +
+        `${expected} but NEXT_PUBLIC_SUPABASE_URL resolves to ${ref ?? "none"}.`,
+    );
+  }
+}
+
 export function supabasePublicConfig() {
   // Must stay literal `process.env.NEXT_PUBLIC_…` reads: Next only inlines
   // public values into browser code when written out like this. A dynamic
@@ -107,5 +139,6 @@ export function supabasePublicConfig() {
       "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.",
     );
   }
+  assertProjectMatchesEnvironment(url);
   return { url, anonKey };
 }
