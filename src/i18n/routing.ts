@@ -5,7 +5,11 @@ export type Locale = (typeof locales)[number];
 
 export const routing = defineRouting({
   locales,
-  defaultLocale: "en",
+  defaultLocale: "bn",
+  // Bangla is the default even when the browser asks for English.
+  // A reader who picks English still stays on /en; only an unprefixed URL
+  // falls back here.
+  localeDetection: false,
   localePrefix: "always",
   localeCookie: {
     name: "NEXT_LOCALE",

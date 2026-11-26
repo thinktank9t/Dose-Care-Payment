@@ -1,14 +1,16 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Fraunces, Inter, Noto_Sans_Bengali } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/lib/env";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { CONTRAST_COOKIE, TEXT_COOKIE, THEME_COOKIE, parseContrast, parseText, parseTheme } from "@/lib/theme";
 import { LocaleGuard } from "@/components/LocaleGuard";
+import { AppearanceSync } from "@/components/AppearanceSync";
+import { TopLoader } from "@/components/TopLoader";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -27,7 +29,9 @@ const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali"],
   weight: ["400", "500", "600"],
   variable: "--font-noto-bengali",
+  // Preload on every locale so EN→BN does not flash fallback glyphs.
   display: "swap",
+  preload: true,
 });
 
 export function generateStaticParams() {
@@ -49,10 +53,28 @@ export async function generateMetadata({
       languages: { en: "/en", bn: "/bn" },
     },
     openGraph: { title: t("premium"), description: t("description"), type: "website" },
+    // iOS Safari would otherwise turn emails, phone numbers and addresses into
+    // underlined links (the profile email, bKash numbers).
+    formatDetection: { email: false, telephone: false, address: false },
   };
 }
 
-export const viewport = { themeColor: "#F6F4EF", width: "device-width", initialScale: 1 };
+export async function generateViewport(): Promise<Viewport> {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  // viewport-fit=cover: draw edge to edge on iPhone so the fixed tab bar can sit
+  // on the real bottom edge (its padding adds the safe-area inset), instead of
+  // Safari leaving an unpainted band below it when its toolbar collapses.
+  const shared = { width: "device-width", initialScale: 1, viewportFit: "cover" } as const;
+  if (theme === "light") return { ...shared, themeColor: "#F3F6F8" };
+  if (theme === "dark") return { ...shared, themeColor: "#0B141A" };
+  return {
+    ...shared,
+    themeColor: [
+      { media: "(prefers-color-scheme: light)", color: "#F3F6F8" },
+      { media: "(prefers-color-scheme: dark)", color: "#0B141A" },
+    ],
+  };
+}
 
 export default async function LocaleLayout({
   children,
@@ -66,19 +88,29 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const jar = await cookies();
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
+  const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
+  const text = parseText(jar.get(TEXT_COOKIE)?.value);
 
   return (
-    <html lang={locale} className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}>
+    <html
+      lang={locale}
+      data-theme={theme === "system" ? undefined : theme}
+      data-contrast={contrast ? "high" : undefined}
+      className={`${fraunces.variable} ${inter.variable} ${notoBengali.variable}`}
+      style={text === "1" ? undefined : { fontSize: `${Number(text) * 100}%` }}
+    >
       <body className="flex min-h-svh flex-col">
         <NextIntlClientProvider messages={messages}>
           <Suspense fallback={null}>
             <LocaleGuard />
           </Suspense>
-          <Header />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          <AppearanceSync />
+          <Suspense fallback={null}>
+            <TopLoader />
+          </Suspense>
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

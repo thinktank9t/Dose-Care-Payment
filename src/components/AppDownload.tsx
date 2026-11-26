@@ -15,9 +15,9 @@ function PlayGlyph({ size = 17 }: { size?: number }) {
 /**
  * "Download the app" band on the landing page.
  *
- * The QR code is generated from whatever `playStore()` returns, so when the
- * real listing URL is set the code and the button both point at it. Until then
- * the button is inert and labelled "coming soon" rather than a dead link.
+ * When the real listing URL is set, the QR code and the button both point at
+ * it. Until then there is no QR, the button is inert, and one "coming soon"
+ * pill plus one sentence say so, rather than a dead link.
  */
 export async function AppDownload() {
   const t = await getTranslations("app");
@@ -29,7 +29,8 @@ export async function AppDownload() {
         <div className="max-w-[46ch]">
           <SectionLabel className="mb-3">{t("label")}</SectionLabel>
           <h2 id="app-h">{t("title")}</h2>
-          <p className="mt-4 text-ink-2">{t("body")}</p>
+          {/* The body talks about scanning the code, so it only shows with one. */}
+          {isPlaceholder ? null : <p className="mt-4 text-ink-2">{t("body")}</p>}
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             {isPlaceholder ? (
@@ -54,7 +55,7 @@ export async function AppDownload() {
               </a>
             )}
             {isPlaceholder ? (
-              <span className="pill bg-warn-soft text-warn">{t("comingSoon")}</span>
+              <span className="pill bg-accent-soft text-accent-ink">{t("comingSoon")}</span>
             ) : null}
           </div>
 
@@ -63,13 +64,17 @@ export async function AppDownload() {
           ) : null}
         </div>
 
-        {/* QR card. The quiet zone is part of the SVG, hence the tight padding. */}
-        <div className="shrink-0 self-start md:self-center">
-          <div className="w-fit rounded-2xl border border-line bg-surface p-3">
-            <QrCode value={url} size={148} title={t("qrAlt")} />
+        {/* QR card, only for a real listing: a code that scans to a
+            placeholder would look like it works. The quiet zone is part of
+            the SVG, hence the tight padding. */}
+        {isPlaceholder ? null : (
+          <div className="shrink-0 self-start md:self-center">
+            <div className="w-fit rounded-2xl border border-line bg-surface p-3">
+              <QrCode value={url} size={148} title={t("qrAlt")} />
+            </div>
+            <p className="mt-3 text-center text-small text-ink-2">{t("scan")}</p>
           </div>
-          <p className="mt-3 text-center text-small text-ink-2">{t("scan")}</p>
-        </div>
+        )}
       </div>
     </section>
   );

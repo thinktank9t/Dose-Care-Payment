@@ -8,15 +8,17 @@ test.beforeEach(async ({ page }) => {
   await signOut(page);
 });
 
-test("landing renders and the CTA leads to Get Premium", async ({ page }) => {
+test("signed-out visitors land on the public page; Google unlocks the app", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/en$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Care for everyone");
-  // Prices live in Supabase, which this suite does not serve: the pricing
-  // section has to degrade to a message instead of taking the page down.
-  await expect(page.locator("#pricing")).toContainText("couldn't load the plans");
-  await page.getByTestId("cta-get-premium").click();
-  await expect(page).toHaveURL(/\/en\/get-premium$/);
+  await expect(page).toHaveURL(/\/bn\/premium$/);
+  await page.getByTestId("nav-sign-in").click();
+  await expect(page).toHaveURL(/\/bn\/sign-in\?next=%2F$/);
+  await page.getByTestId("google-sign-in").click();
+  await expect(page).toHaveURL(/\/bn$/);
+  await expect(page.getByTestId("onboarding")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("ডোজ");
+  await page.goto("/bn/get-premium");
+  await expect(page.getByTestId("nav-get-premium")).toHaveAttribute("aria-current", "page");
 });
 
 test("protected pages redirect to sign-in and back after Google sign-in", async ({ page }) => {
@@ -24,7 +26,7 @@ test("protected pages redirect to sign-in and back after Google sign-in", async 
   await expect(page).toHaveURL(/\/en\/sign-in\?next=%2Fpay$/);
   await page.getByTestId("google-sign-in").click();
   await expect(page).toHaveURL(/\/en\/pay$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Get Premium");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Send a payment for review");
 
   await page.goto("/en/account");
   await expect(page.getByTestId("plan-card")).toHaveAttribute("data-plan-status", "free");
@@ -103,13 +105,13 @@ test("language switch keeps the current page and query", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "bn");
   await expect(page.getByTestId("google-sign-in")).toHaveText("গুগল দিয়ে চালিয়ে যান");
 
-  // The choice is remembered: an unprefixed URL now lands on /bn.
-  await page.goto("/");
+  await signInAs(page, "user", "/bn");
   await expect(page).toHaveURL(/\/bn$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("প্রিয়জনদের");
+  await expect(page.getByTestId("onboarding")).toBeVisible();
 
+  await page.goto("/bn/get-premium");
   await page.getByTestId("lang-en").click();
-  await expect(page).toHaveURL(/\/en$/);
+  await expect(page).toHaveURL(/\/en\/get-premium$/);
 });
 
 test("Bangla account page uses the app's plan strings", async ({ page }) => {
@@ -119,24 +121,14 @@ test("Bangla account page uses the app's plan strings", async ({ page }) => {
 });
 
 test("404 is localised", async ({ page }) => {
+  await signInAs(page, "user", "/bn");
   const res = await page.goto("/bn/does-not-exist");
   expect(res?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("পাতাটি পাওয়া যায়নি");
 });
 
-test("the landing page routes an existing customer to the status check", async ({ page }) => {
-  await page.goto("/en");
-  await page.getByTestId("hero-check-status").click();
-  await expect(page).toHaveURL(/\/en\/check-status$/);
-
-  // And the card under the pricing cards goes to the same place.
-  await page.goto("/en#pricing");
-  await page.getByTestId("check-status-card").getByTestId("link-check-status").click();
-  await expect(page).toHaveURL(/\/en\/check-status$/);
-});
-
 test("Get Premium links to the status check, which validates the email client-side", async ({ page }) => {
-  await page.goto("/en/get-premium");
+  await signInAs(page, "user", "/en/get-premium");
   await page.getByTestId("link-check-status").click();
   await expect(page).toHaveURL(/\/en\/check-status$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Check your Premium");

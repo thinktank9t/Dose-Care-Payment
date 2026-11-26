@@ -3,10 +3,11 @@ import { isFakeBackend } from "@/lib/env";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { FAKE_SESSION_COOKIE } from "@/lib/auth/session";
 import { encodeFakeSession } from "@/lib/auth/fake-identities";
+import { routing } from "@/i18n/routing";
 
 /**
  * Test-only sign-in. Only mounted when E2E_FAKE_BACKEND=1 (404 otherwise).
- *   /auth/fake?as=user|admin&next=/en/pay   -> sets a fake session cookie
+ *   /auth/fake?as=user|admin&next=/bn/pay   -> sets a fake session cookie
  *   /auth/fake?reset=1                       -> wipes the in-memory store
  */
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   const as = searchParams.get("as") === "admin" ? "admin" : "user";
-  const next = safeNextPath(searchParams.get("next"), "/en/account");
+  const next = safeNextPath(searchParams.get("next"), `/${routing.defaultLocale}/account`);
   const response = NextResponse.redirect(`${origin}${next}`);
   response.cookies.set(
     FAKE_SESSION_COOKIE,

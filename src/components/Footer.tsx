@@ -11,7 +11,7 @@ function MailIcon({ size = 14 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
@@ -30,7 +30,7 @@ function ArrowUpIcon({ size = 14 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
@@ -41,7 +41,8 @@ function ArrowUpIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-const linkClass = "text-ink-2 transition-colors hover:text-ink";
+// 44px rows: the hit area is the row, the text stays small.
+const linkClass = "inline-flex min-h-11 items-center text-ink-2 transition-colors hover:text-ink";
 
 export async function Footer() {
   const t = await getTranslations("footer");
@@ -63,10 +64,10 @@ export async function Footer() {
             <p className="mt-4 text-small text-ink-2">{t("tagline")}</p>
             <a
               href={`mailto:${email}`}
-              className="mt-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-small font-medium text-accent-ink transition-colors hover:border-accent"
+              className="mt-5 inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-small font-medium text-accent-ink transition-colors hover:border-accent"
             >
-              <MailIcon />
-              <span className="break-all">{email}</span>
+              <span className="shrink-0"><MailIcon /></span>
+              <span className="min-w-0 break-all">{email}</span>
             </a>
             <p className="mt-4 text-small text-ink-3">{t("payments")}</p>
           </div>
@@ -76,9 +77,9 @@ export async function Footer() {
             <p id="footer-product" className="label-micro">
               {t("productHeading")}
             </p>
-            <ul className="mt-4 space-y-2.5 text-small">
+            <ul className="mt-2 text-small">
               <li>
-                <Link href="/#pricing" className={linkClass}>
+                <Link href="/premium#pricing" className={linkClass}>
                   {nav("pricing")}
                 </Link>
               </li>
@@ -93,7 +94,7 @@ export async function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#compare" className={linkClass}>
+                <Link href="/premium#compare" className={linkClass}>
                   {t("compare")}
                 </Link>
               </li>
@@ -105,7 +106,7 @@ export async function Footer() {
             <p id="footer-legal" className="label-micro">
               {t("legalHeading")}
             </p>
-            <ul className="mt-4 space-y-2.5 text-small">
+            <ul className="mt-2 text-small">
               <li>
                 <Link href="/privacy" className={linkClass}>
                   {t("privacy")}
@@ -135,7 +136,7 @@ export async function Footer() {
           <p>{t("rights", { year: new Date().getFullYear() })}</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <span>{t("madeIn")}</span>
-            <a href="#main" className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">
+            <a href="#main" className="inline-flex min-h-11 items-center gap-1.5 transition-colors hover:text-ink">
               <ArrowUpIcon size={13} />
               {t("backToTop")}
             </a>

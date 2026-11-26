@@ -10,8 +10,23 @@ import { Sparkle } from "./Sparkle";
  * this?". Deliberately quieter than the buy CTAs around it: it must never
  * compete with them for a first-time visitor's attention.
  */
-export async function CheckStatusCard() {
+export async function CheckStatusCard({ actionOnly = false }: { actionOnly?: boolean } = {}) {
   const t = await getTranslations("checkStatus");
+
+  // The landing hero already says "Already paid? Check your Premium status",
+  // so under the prices this is just the action, not the sentence again.
+  if (actionOnly) {
+    return (
+      <Link
+        href="/check-status"
+        className="btn btn-secondary w-full whitespace-nowrap sm:w-auto"
+        data-testid="link-check-status"
+      >
+        <Sparkle size={15} className="text-accent" />
+        {t("bannerCta")}
+      </Link>
+    );
+  }
 
   return (
     <section

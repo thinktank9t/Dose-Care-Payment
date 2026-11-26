@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Link, usePathname } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { locales, type Locale } from "@/i18n/routing";
 import { rememberLocaleChoice } from "@/i18n/locale-choice";
 
@@ -124,6 +124,17 @@ function useRestoreAnchor(locale: string) {
   }, [locale]);
 }
 
+function switchLocale(run: () => void) {
+  const doc = document as Document & {
+    startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+  };
+  if (typeof doc.startViewTransition === "function") {
+    doc.startViewTransition(run);
+    return;
+  }
+  run();
+}
+
 /**
  * Keeps the current page (and its query string) when switching language.
  *
@@ -133,15 +144,16 @@ function useRestoreAnchor(locale: string) {
  * It also keeps the reader's place, since the two locales set text at
  * different heights.
  *
- * The click is also recorded as a choice, which [[LocaleGuard]] then holds to
- * for the rest of the session — history entries made before the switch still
- * carry the old language in their URL.
+ * Uses the View Transitions API when available so the `[locale]` remount
+ * crossfades instead of blinking.
  */
 export function LanguageSwitcher() {
   const t = useTranslations("nav");
   const locale = useLocale();
   const pathname = usePathname();
   const search = useSearchParams();
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const query = search.toString();
   const href = query ? `${pathname}?${query}` : pathname;
 
@@ -152,21 +164,20 @@ export function LanguageSwitcher() {
       {locales.map((l) => {
         const active = l === locale;
         return (
-          <Link
+          <button
             key={l}
-            href={href}
-            locale={l}
-            hrefLang={l}
-            replace
-            scroll={false}
-            onClick={
-              active
-                ? undefined
-                : () => {
-                    rememberLocaleChoice(l);
-                    rememberAnchor();
-                  }
-            }
+            type="button"
+            disabled={active}
+            onClick={() => {
+              if (active) return;
+              rememberLocaleChoice(l);
+              rememberAnchor();
+              switchLocale(() => {
+                startTransition(() => {
+                  router.replace(href, { locale: l, scroll: false });
+                });
+              });
+            }}
             aria-current={active ? "true" : undefined}
             aria-label={l === "en" ? t("english") : t("bangla")}
             data-testid={`lang-${l}`}
@@ -175,7 +186,7 @@ export function LanguageSwitcher() {
             }`}
           >
             {LABEL[l]}
-          </Link>
+          </button>
         );
       })}
     </nav>

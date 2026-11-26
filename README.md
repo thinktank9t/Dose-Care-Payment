@@ -59,9 +59,19 @@ npm run dev
    Extensions; if it isn't enabled the migration prints a notice and skips the
    schedule — re-run it after enabling).
 2. **Enable Google** under Authentication → Providers (same OAuth client the
-   app uses is fine). Add `https://<site>/auth/callback` (and
-   `http://localhost:3000/auth/callback`) to Authentication → URL
-   configuration → Redirect URLs.
+   app uses is fine). Two allowlists must both be correct or Google shows
+   `Error 400: redirect_uri_mismatch`:
+   - **Google Cloud Console** → APIs & Services → Credentials → your OAuth
+     Web client → Authorized redirect URIs must include Supabase's callback
+     exactly:
+     `https://zonvummielhetzcyootb.supabase.co/auth/v1/callback`
+     (use the Dev project URL if you point `NEXT_PUBLIC_SUPABASE_URL` there).
+     Do **not** put the site's `/auth/callback` here — Google never sees that.
+   - **Supabase Dashboard** → Authentication → URL Configuration → Redirect
+     URLs must include the site callback (no query string):
+     `http://localhost:3000/auth/callback` and `https://<site>/auth/callback`.
+     Site URL should match `NEXT_PUBLIC_SITE_URL` (same host you open in the
+     browser — `localhost` and `127.0.0.1` are different).
 3. **Add admins**: `insert into public.admin_users (email) values ('you@example.com');`
    (lower-case).
 

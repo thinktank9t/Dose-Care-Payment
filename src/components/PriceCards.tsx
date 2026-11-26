@@ -1,5 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { unstable_cache } from "next/cache";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { formatBdt } from "@/lib/format";
 import {
   bestValuePeriod,
@@ -18,7 +20,7 @@ import { Sparkle } from "./Sparkle";
  */
 export function PriceCardsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2" role="status" aria-busy="true">
+    <div className="shimmer grid gap-4 sm:grid-cols-2" role="status" aria-busy="true">
       {[0, 1].map((i) => (
         <Skeleton key={i} className="h-[232px]" />
       ))}
@@ -26,17 +28,25 @@ export function PriceCardsSkeleton() {
   );
 }
 
+/**
+ * Plans change rarely, and the landing page renders on every visit (it reads
+ * cookies), so keep the lookup for 5 minutes instead of querying Supabase each
+ * time. A failed lookup throws and is not cached.
+ */
+const cachedPlans = unstable_cache(fetchActivePlans, ["active-plans"], { revalidate: 300 });
+
 /** Periods that already have translated copy in the `plans` namespace. */
 const NAMED_PERIODS = new Set(["monthly", "yearly"]);
 
 export async function PriceCards() {
+  const locale = (await getLocale()) as Locale;
   const t = await getTranslations("plans");
   const tg = await getTranslations("getPremium");
 
   let plans: ClaimPlan[] = [];
   let failed = false;
   try {
-    plans = await fetchActivePlans();
+    plans = await cachedPlans();
   } catch {
     // Never let a pricing lookup take the landing page down.
     failed = true;
@@ -87,7 +97,10 @@ export async function PriceCards() {
         return (
           <article
             key={plan.period}
-            className={`card flex flex-col gap-5 p-6 ${highlight ? "border-accent/40 ring-1 ring-accent/20" : ""}`}
+            className="card flex flex-col gap-5 p-6"
+            // The suggested plan gets one 2px accent line in place of the
+            // hairline, never a border plus a ring.
+            style={highlight ? { border: "2px solid var(--accent)" } : undefined}
             data-testid={`price-${plan.period}`}
           >
             <div className="flex items-center justify-between gap-3">
@@ -101,13 +114,13 @@ export async function PriceCards() {
             <div>
               <p className="flex items-baseline gap-2">
                 <span className="font-heading text-[38px] leading-none text-ink">
-                  {formatBdt(plan.amount)}
+                  {formatBdt(plan.amount, locale)}
                 </span>
                 {per ? <span className="text-small text-ink-2">{per}</span> : null}
               </p>
               {saving > 0 ? (
                 <p className="mt-3 inline-flex rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent-ink">
-                  {t("savePerYear", { amount: formatBdt(saving) })}
+                  {t("savePerYear", { amount: formatBdt(saving, locale) })}
                 </p>
               ) : null}
             </div>
